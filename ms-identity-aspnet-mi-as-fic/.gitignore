@@ -1,0 +1,26 @@
+# Ignore appsettings files
+# appsettings.json
+# appsettings.Development.json
+
+# Ignore the bin and obj folders (contains compiled binary files)
+bin/
+obj/
+
+# Ignore user-specific files
+*.user
+*.vs
+
+# Ignore publish output folders
+publish/
+wwwroot/
+
+# Ignore other temporary files
+*.log
+*.pdb
+*.exe
+*.dll
+*.db
+*.zip
+local.*
+
+appsettings.*.json

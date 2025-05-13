@@ -1,0 +1,15 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="text-center">
+    <h1 class="display-4 mb-4">Welcome</h1>
+    <h2 class="h3 mb-4">This sample demonstrates using managed identity as a federated identity credentials in 3 scenarios:</h2>
+    <div class="list-group w-75 mx-auto">
+        <a href="/Graph" class="list-group-item list-group-item-action">1. Access Microsoft Graph using delegated permissions.</a>
+        <a href="/Storage" class="list-group-item list-group-item-action">2. Access Azure Storage in the same tenant.</a>
+        <a href="/Vault" class="list-group-item list-group-item-action">3. Access Azure KeyVault in another tenant.</a>
+    </div>
+</div>
