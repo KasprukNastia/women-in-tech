@@ -1,19 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using MiFicExamples.Models;
+using MiFicExamples.Comments;
 
-namespace MiFicExamples.Pages.AzureStorage
+namespace MiFicExamples.Pages.Storage
 {
     public class DeleteModel : PageModel
     {
-        private readonly MiFicExamples.Data.CommentsContext _context;
-        public DeleteModel(MiFicExamples.Data.CommentsContext context)
-        {
-            _context = context;
-            Comment = new();
-        }
+        private readonly ICommentsProvider _commentsProvider;
+
         [BindProperty]
         public Comment Comment { get; set; }
+
+        public DeleteModel(ICommentsProvider commentsProvider)
+        {
+            _commentsProvider = commentsProvider;
+            Comment = new();
+        }
 
         public async Task<IActionResult> OnGetAsync(string id)
         {
@@ -22,7 +24,7 @@ namespace MiFicExamples.Pages.AzureStorage
                 return NotFound();
             }
 
-            List<Comment> comments = await _context.GetComments();
+            List<Comment> comments = await _commentsProvider.GetAllComments();
             Comment = comments.FirstOrDefault(m => m.Name == id) ?? throw new InvalidOperationException("Comment not found.");
 
             if (Comment == null)
@@ -39,12 +41,12 @@ namespace MiFicExamples.Pages.AzureStorage
                 return NotFound();
             }
 
-            List<Comment> comments = await _context.GetComments();
+            List<Comment> comments = await _commentsProvider.GetAllComments();
             Comment = comments.FirstOrDefault(m => m.Name == id)!;
 
             if (Comment != null)
             {
-                await _context.DeleteComment(Comment);
+                await _commentsProvider.DeleteComment(Comment);
             }
 
             return RedirectToPage("./Index");

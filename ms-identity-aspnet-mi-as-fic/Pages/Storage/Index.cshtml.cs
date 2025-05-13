@@ -1,23 +1,23 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using MiFicExamples.Models;
-using System.Collections.Generic;
+using MiFicExamples.Comments;
 
-namespace MiFicExamples.Pages.AzureStorage
+namespace MiFicExamples.Pages.Storage
 {
     public class IndexModel : PageModel
     {
-        private readonly MiFicExamples.Data.CommentsContext _context;
-        public IndexModel(MiFicExamples.Data.CommentsContext context)
+        private readonly ICommentsProvider _commentsProvider;
+
+        public IList<Comment> Comments { get; set; }
+
+        public IndexModel(ICommentsProvider commentsProvider)
         {
-            _context = context;
+            _commentsProvider = commentsProvider;
             Comments = new List<Comment>();
         }
 
-        public IList<Comment> Comments { get; set; }
         public async Task OnGetAsync()
         {
-            Comments = await _context.GetComments();
+            Comments = await _commentsProvider.GetAllComments();
         }
     }
 }

@@ -1,25 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using MiFicExamples.Models;
+using MiFicExamples.Comments;
 
-namespace MiFicExamples.Pages.AzureStorage
+namespace MiFicExamples.Pages.Storage
 {
     public class CreateModel : PageModel
     {
-        private readonly MiFicExamples.Data.CommentsContext _context;
-        public CreateModel(MiFicExamples.Data.CommentsContext context)
+        private readonly ICommentsProvider _commentsProvider;
+
+        [BindProperty]
+        public Comment Comment { get; set; }
+
+        public CreateModel(ICommentsProvider commentsProvider)
         {
-            _context = context;
+            _commentsProvider = commentsProvider;
             Comment = new();
         }
         public IActionResult OnGet()
         {
             return Page();
         }
-
-        [BindProperty]
-        public Comment Comment { get; set; }
 
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://aka.ms/RazorPagesCRUD.
@@ -30,7 +30,7 @@ namespace MiFicExamples.Pages.AzureStorage
                 return Page();
             }
 
-            await _context.CreateComment(Comment);
+            await _commentsProvider.CreateComment(Comment);
 
             return RedirectToPage("./Index");
         }

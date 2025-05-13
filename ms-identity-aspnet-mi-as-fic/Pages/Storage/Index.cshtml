@@ -1,5 +1,5 @@
 ﻿@page
-@model MiFicExamples.Pages.AzureStorage.IndexModel
+@model MiFicExamples.Pages.Storage.IndexModel
 @{
     ViewData["Title"] = "Index";
 }
@@ -21,7 +21,7 @@
                 @Html.DisplayNameFor(model => model.Comments[0].Name)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Comments[0].UserComment)
+                @Html.DisplayNameFor(model => model.Comments[0].Text)
             </th>
             <th></th>
         </tr>
@@ -34,7 +34,7 @@
                     @Html.DisplayFor(modelItem => item.Name)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.UserComment)
+                    @Html.DisplayFor(modelItem => item.Text)
                 </td>
                 <td>
                     <a asp-page="./Delete" asp-route-id="@item.Name">Delete</a>
