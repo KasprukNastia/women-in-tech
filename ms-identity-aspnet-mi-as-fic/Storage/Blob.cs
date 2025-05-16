@@ -2,6 +2,6 @@
 
 public record Blob
 {
-    public required string Name { get; init; }
-    public required string Content { get; init; }
+    public string? Key { get; init; }
+    public string? Content { get; init; }
 }

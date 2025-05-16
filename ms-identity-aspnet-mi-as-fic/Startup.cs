@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Microsoft.IdentityModel.Logging;
-using MiFicExamples.Comments;
+using MiFicExamples.Auth;
+using MiFicExamples.Auth.Configuration;
 using MiFicExamples.Storage;
 using MiFicExamples.Storage.Configuration;
+using MiFicExamples.Vault.Configuration;
 
 
 namespace MiFicExamples
@@ -30,11 +32,12 @@ namespace MiFicExamples
                     .AddMicrosoftGraph(Configuration.GetSection("DownstreamApis:MicrosoftGraph"))
                     .AddInMemoryTokenCaches();
 
-            services.AddScoped<BlobClientConfig>();
+            services.AddScoped<IClientAssertionCredentialFactory, ClientAssertionCredentialFactory>();
             services.AddScoped<IBlobStorageClient, BlobStorageClient>();
 
+            services.AddScoped<AuthConfig>();
             services.AddScoped<BlobStorageConfig>();
-            services.AddScoped<ICommentsProvider, CommentsProvider>();
+            services.AddScoped<KeyVaultConfig>();
 
             services.AddAuthorization(options =>
             {

@@ -1,28 +1,30 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using MiFicExamples.Comments;
+using MiFicExamples.Storage;
+using MiFicExamples.Storage.Configuration;
 
 namespace MiFicExamples.Pages.Storage
 {
     public class CreateModel : PageModel
     {
-        private readonly ICommentsProvider _commentsProvider;
+        private readonly IBlobStorageClient _blobStorageClient;
+        private readonly BlobStorageConfig _blobStorageConfig;
 
         [BindProperty]
-        public Comment Comment { get; set; }
+        public Blob Blob { get; set; }
 
-        public CreateModel(ICommentsProvider commentsProvider)
+        public CreateModel(IBlobStorageClient blobStorageClient,
+            BlobStorageConfig blobStorageConfig)
         {
-            _commentsProvider = commentsProvider;
-            Comment = new();
+            _blobStorageClient = blobStorageClient;
+            _blobStorageConfig = blobStorageConfig;
+            Blob = new();
         }
         public IActionResult OnGet()
         {
             return Page();
         }
 
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
@@ -30,7 +32,7 @@ namespace MiFicExamples.Pages.Storage
                 return Page();
             }
 
-            await _commentsProvider.CreateComment(Comment);
+            await _blobStorageClient.UploadBlobToStorage(_blobStorageConfig, Blob);
 
             return RedirectToPage("./Index");
         }

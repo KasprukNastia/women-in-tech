@@ -10,7 +10,9 @@ public record BlobStorageConfig
     {
         var azureStorageConfigSection = configuration.GetSection("AzureStorageConfig");
 
-        AccountName = azureStorageConfigSection[nameof(AccountName)]!;
-        ContainerName = azureStorageConfigSection[nameof(ContainerName)]!
+        AccountName = azureStorageConfigSection[nameof(AccountName)] ??
+            throw new ArgumentException("Blob storage account name cannot be null");
+        ContainerName = azureStorageConfigSection[nameof(ContainerName)] ??
+            throw new ArgumentException("Blob storage container name cannot be null");
     }
 }

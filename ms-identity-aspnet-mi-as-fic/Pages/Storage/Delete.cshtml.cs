@@ -1,52 +1,57 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using MiFicExamples.Comments;
+using MiFicExamples.Storage;
+using MiFicExamples.Storage.Configuration;
 
 namespace MiFicExamples.Pages.Storage
 {
     public class DeleteModel : PageModel
     {
-        private readonly ICommentsProvider _commentsProvider;
+        private readonly IBlobStorageClient _blobStorageClient;
+        private readonly BlobStorageConfig _blobStorageConfig;
 
         [BindProperty]
-        public Comment Comment { get; set; }
+        public Blob Blob { get; set; }
 
-        public DeleteModel(ICommentsProvider commentsProvider)
+        public DeleteModel(IBlobStorageClient blobStorageClient,
+            BlobStorageConfig blobStorageConfig)
         {
-            _commentsProvider = commentsProvider;
-            Comment = new();
+            _blobStorageClient = blobStorageClient;
+            _blobStorageConfig = blobStorageConfig;
+            Blob = new();
         }
 
         public async Task<IActionResult> OnGetAsync(string id)
         {
-            if (id == null)
+            if (string.IsNullOrWhiteSpace(id))
             {
                 return NotFound();
             }
 
-            List<Comment> comments = await _commentsProvider.GetAllComments();
-            Comment = comments.FirstOrDefault(m => m.Name == id) ?? throw new InvalidOperationException("Comment not found.");
+            List<Blob> Blobs = await _blobStorageClient.GetAllBlobsFromStorage(_blobStorageConfig);
+            Blob = Blobs.FirstOrDefault(m => m.Key == id) ?? throw new InvalidOperationException("Blob not found.");
 
-            if (Comment == null)
+            if (Blob == null)
             {
                 return NotFound();
             }
+
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(string id)
         {
-            if (id == null)
+            if (string.IsNullOrWhiteSpace(id))
             {
                 return NotFound();
             }
 
-            List<Comment> comments = await _commentsProvider.GetAllComments();
-            Comment = comments.FirstOrDefault(m => m.Name == id)!;
+            List<Blob> Blobs = await _blobStorageClient.GetAllBlobsFromStorage(_blobStorageConfig);
+            Blob = Blobs.FirstOrDefault(m => m.Key == id)!;
 
-            if (Comment != null)
+            if (Blob?.Key != null)
             {
-                await _commentsProvider.DeleteComment(Comment);
+                await _blobStorageClient.DeleteBlobFromStorage(_blobStorageConfig, Blob.Key);
             }
 
             return RedirectToPage("./Index");

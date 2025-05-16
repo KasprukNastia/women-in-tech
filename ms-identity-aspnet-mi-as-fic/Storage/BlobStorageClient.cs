@@ -1,6 +1,7 @@
-﻿using Azure.Identity;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using MiFicExamples.Auth;
+using MiFicExamples.Auth.Configuration;
 using MiFicExamples.Storage.Configuration;
 using System.Text;
 
@@ -8,11 +9,14 @@ namespace MiFicExamples.Storage;
 
 public class BlobStorageClient : IBlobStorageClient
 {
-    private readonly BlobClientConfig _blobClientConfig;
+    private readonly AuthConfig _authConfig;
+    private readonly IClientAssertionCredentialFactory _clientAssertionCredentialFactory;
 
-    public BlobStorageClient(BlobClientConfig blobClientConfig)
+    public BlobStorageClient(AuthConfig authConfig,
+        IClientAssertionCredentialFactory clientAssertionCredentialFactory)
     {
-        _blobClientConfig = blobClientConfig;
+        _authConfig = authConfig;
+        _clientAssertionCredentialFactory = clientAssertionCredentialFactory;
     }
 
     public async Task UploadBlobToStorage(BlobStorageConfig blobStorageConfig, Blob blob)
@@ -27,7 +31,7 @@ public class BlobStorageClient : IBlobStorageClient
 
         using (MemoryStream contentStream = new MemoryStream(byteArray))
         {
-            await containerClient.UploadBlobAsync(blob.Name, contentStream);
+            await containerClient.UploadBlobAsync(blob.Key, contentStream);
         }
     }
 
@@ -59,7 +63,7 @@ public class BlobStorageClient : IBlobStorageClient
 
             var blobContent = new string(Encoding.ASCII.GetString(bytes));
 
-            blobs.Add(new Blob { Name = blob.Name, Content = blobContent });
+            blobs.Add(new Blob { Key = blob.Name, Content = blobContent });
         }
 
         return blobs;
@@ -67,18 +71,11 @@ public class BlobStorageClient : IBlobStorageClient
 
     private async Task<BlobContainerClient> CreateBlobStorageClient(BlobStorageConfig blobStorageConfig)
     {
-        var miCredential = new ManagedIdentityCredential(_blobClientConfig.ManagedIdentityClientId);
-
-        ClientAssertionCredential creds = new(
-            _blobClientConfig.TenantId,
-            _blobClientConfig.AppClientId,
-            async (token) =>
-            {
-                // fetch Managed Identity token for the specified audience
-                var tokenRequestContext = new Azure.Core.TokenRequestContext([$"{_blobClientConfig.AuthTokenAudience}/.default"]);
-                var accessToken = await miCredential.GetTokenAsync(tokenRequestContext).ConfigureAwait(false);
-                return accessToken.Token;
-            });
+        var creds = _clientAssertionCredentialFactory.GetClientAssertionCredential(
+            _authConfig.TenantId,
+            _authConfig.AppClientId,
+            _authConfig.ManagedIdentityClientId,
+            [$"{_authConfig.AuthTokenAudience}/.default"]);
 
         // Get a credential and create a client object for the blob container.
         var containerClient = new BlobContainerClient(new Uri(blobStorageConfig.ContainerEndpoint), creds);
