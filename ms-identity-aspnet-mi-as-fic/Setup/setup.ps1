@@ -40,16 +40,16 @@ Ensure you review and understand the script's operations before proceeding.
 
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$False, HelpMessage='A prefix that will be used to name the resources')]
+    [Parameter(Mandatory=$True, HelpMessage='A prefix that will be used to name the resources')]
     [string]$RESOURCE_PREFIX,
 
-    [Parameter(Mandatory=$False, HelpMessage='The Azure location where the resources will be created')]
+    [Parameter(Mandatory=$True, HelpMessage='The Azure location where the resources will be created')]
     [string]$LOCATION,
 
-    [Parameter(Mandatory=$True, HelpMessage='A different tenant to create the Key Vault in. Will create it in the home app tenant if not provided')]
+    [Parameter(Mandatory=$False, HelpMessage='A different tenant to create the Key Vault in. Will create it in the home app tenant if not provided')]
     [string]$REMOTE_KV_TENANT,
 
-    [Parameter(Mandatory=$True, HelpMessage='The subscription to create the keyvault in. Will create it in the home app tenant if not provided')]
+    [Parameter(Mandatory=$False, HelpMessage='The subscription to create the keyvault in. Will create it in the home app tenant if not provided')]
     [string]$REMOTE_KV_SUBSCRIPTION
 )
 
@@ -105,8 +105,6 @@ $SUBSCRIPTION = $userConfig.Subscription
 $TENANT = $userConfig.Tenant
 $CURRENT_USER_EMAIL = $userConfig.UserEmail
 $DOMAIN_NAME = $userConfig.DomainName
-
-
 
 Write-Host "############## Step 2: Create a Resource Group ##############" -ForegroundColor Yellow
 start-sleep -Milliseconds 500

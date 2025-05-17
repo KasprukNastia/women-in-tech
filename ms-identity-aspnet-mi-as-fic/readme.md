@@ -46,7 +46,7 @@ Alternatively, you can adapt the script to only provision the resources you need
 
 ### Example execution
 ```powershell
-.\setup.ps1 -TENANT "your-tenant-id" -SUBSCRIPTION "your-subscription-id" -RESOURCE_PREFIX "SampleApp" -LOCATION "eastus"
+.\setup.ps1 -RESOURCE_PREFIX "SampleApp" -LOCATION "northeurope"
 ```
 
 This will create all resources and deploy the app to Azure.

@@ -9,9 +9,9 @@
     <h1 class="display-4">@ViewData["Title"]</h1>
     <p>Learn about <a href="https://docs.microsoft.com/en-us/azure/app-service/">building Web apps on Azure App Service</a>.</p>
     <p>    
-        <h3>Getting a secret from a KeyVault in a different tenant:</h3>
+        <h3>Getting a secret from a KeyVault in a different tenant</h3>
         <br /><br /><br />
-        <span><strong>The secret is:</strong> @Model.SecretValue</span>
+        <span><strong>@Model.SecretName:</strong> @Model.SecretValue</span>
         <br />
     </p>
 </div>

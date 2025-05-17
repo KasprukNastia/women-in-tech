@@ -12,6 +12,7 @@ public class IndexModel : PageModel
     private readonly AuthConfig _authConfig;
     private readonly KeyVaultConfig _keyVaultConfig;
 
+    public string SecretName { get; private set; } = string.Empty;
     public string SecretValue { get; private set; } = string.Empty;
 
     public IndexModel(IClientAssertionCredentialFactory clientAssertionCredentialFactory,
@@ -25,7 +26,7 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        // load the secrets..
+        SecretName = _keyVaultConfig.SecretName;
         SecretValue = await GetSecretFromAnotherTenantUsingMsiFic();
     }
 
