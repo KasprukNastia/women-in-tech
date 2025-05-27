@@ -136,18 +136,18 @@ $APP_CLIENT_ID = $confedentialAppConfig.ConfidentialAppId
 $APP_REG_NAME = $confedentialAppConfig.AppRegistrationName
 
 Write-Host "Assigning Storage Blob Data Contributor role to the app.." -ForegroundColor Yellow
-$SP_OBJECT_ID = $(az ad sp show --id $APP_CLIENT_ID --query id -o tsv)
-az role assignment create --assignee $SP_OBJECT_ID --role "Storage Blob Data Contributor" --scope "/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
+$APP_CLIENT_ID = $APP_CLIENT_ID
+az role assignment create --assignee $APP_CLIENT_ID --role "Storage Blob Data Contributor" --scope "/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
 
 Write-Host "############## Step 7: Remote Key Vault Creation ##############" -ForegroundColor Yellow
 start-sleep -Milliseconds 500
 $REMOTE_USER_EMAIL = ""
-$REMOTE_SP_OBJECT_ID = ""
+$REMOTE_APP_CLIENT_ID = ""
 
 if (-not $REMOTE_KV_TENANT -or -not $REMOTE_KV_SUBSCRIPTION) {
     Write-Host "You have not provided a remote subscription for keyvault. Let's create it in the current subscription" -ForegroundColor Yellow
     $REMOTE_USER_EMAIL = $CURRENT_USER_EMAIL
-    $REMOTE_SP_OBJECT_ID = $SP_OBJECT_ID
+    $REMOTE_APP_CLIENT_ID = $APP_CLIENT_ID
 }
 else {
     Write-Host "Now creating a Key Vault in another tenant.. Please be ready to login to the other tenant." -ForegroundColor Yellow
@@ -159,7 +159,7 @@ else {
     Start-Sleep -Milliseconds 100
 }
 
-$keyVaultConfig = .\setup-key-vault.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -SUBSCRIPTION $SUBSCRIPTION -LOCATION $LOCATION -USER_EMAIL $REMOTE_USER_EMAIL -SP_OBJECT_ID $REMOTE_SP_OBJECT_ID
+$keyVaultConfig = .\setup-key-vault.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -SUBSCRIPTION $SUBSCRIPTION -LOCATION $LOCATION -USER_EMAIL $REMOTE_USER_EMAIL -APP_CLIENT_ID $REMOTE_APP_CLIENT_ID
 $KEYVAULT_NAME = $keyVaultConfig.KeyVaultName
 $SECRET_NAME = $keyVaultConfig.SecretName
 
@@ -172,7 +172,7 @@ Write-Host "############## Step 9: Generate appsettings.json ##############" -Fo
 start-sleep -Milliseconds 500
 # make sure the REMOTE_KV_TENANT is set
 if (-not $REMOTE_KV_TENANT) {
-    $REMOTE_KV_TENANT = $TENANT
+    $REMOTE_KV_TENANT = $TENANT
 }
 
 $appsettings = @{

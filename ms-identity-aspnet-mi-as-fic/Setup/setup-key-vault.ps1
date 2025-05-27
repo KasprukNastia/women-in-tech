@@ -1,3 +1,13 @@
+# ==================================================================================================================================================
+# setup-key-vault.ps1
+# ==================================================================================================================================================
+# This script sets up the key vault in remote/current tenant.
+# For remote tenant you have to provide user email from remote tenant.
+#
+# Usage:
+#   .\setup-key-vault.ps1 -RESOURCE_PREFIX <prefix> -SUBSCRIPTION <subscription-id> -LOCATION <location> -USER_EMAIL <email> -APP_CLIENT_ID <app-id>
+# ==================================================================================================================================================
+
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$True)]
@@ -13,7 +23,7 @@ param (
     [string]$USER_EMAIL,
 
     [Parameter(Mandatory=$True)]
-    [string]$SP_OBJECT_ID
+    [string]$APP_CLIENT_ID
 )
 
 $RESOURCE_GROUP_NAME = $RESOURCE_PREFIX + "2RG"
@@ -32,8 +42,9 @@ if ($USER_EMAIL) {
     az role assignment create --assignee "${USER_EMAIL}" --role "Key Vault Secrets Officer" --scope "${KEYVAULT_RESOURCE_ID}"
 }
 
-if ($SP_OBJECT_ID) {
-    az role assignment create --assignee $SP_OBJECT_ID --role "Key Vault Secrets Officer" --scope "${KEYVAULT_RESOURCE_ID}"
+if ($APP_CLIENT_ID) {
+    az ad sp create --id $APP_CLIENT_ID
+    az role assignment create --assignee $APP_CLIENT_ID --role "Key Vault Secrets Officer" --scope "${KEYVAULT_RESOURCE_ID}"
 }
 
 Write-Host "Creating a secret in Key Vault..." -ForegroundColor Yellow

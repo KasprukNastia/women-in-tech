@@ -1,3 +1,12 @@
+# ========================================================================================
+# setup-webapp.ps1
+# ========================================================================================
+# This script sets up Azure Web App
+#
+# Usage:
+#   .\setup-webapp.ps1 -RESOURCE_PREFIX <prefix> -USER_ASSIGNED_RESOURCE_ID <resource-id>
+# ========================================================================================
+
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$True)]

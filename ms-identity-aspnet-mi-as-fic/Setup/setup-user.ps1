@@ -1,3 +1,12 @@
+# ========================================================================
+# setup-user.ps1
+# ========================================================================
+# This script logs in the user
+#
+# Usage:
+#   .\setup-user.ps1 -TENANT <tenant-id> -SUBSCRIPTION <subscription-id>
+# ========================================================================
+
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$False)]

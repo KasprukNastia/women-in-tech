@@ -4,11 +4,7 @@
 # This script sets up the federated identity credential for managed identity
 #
 # Usage:
-#   .\setup-fic.ps1 -RESOURCE_PREFIX <prefix> -TENANT <tenant-id> 
-#                   -CONFEDENTIAL_APP_ID <app-id> -RESOURCE_GROUP_NAME <resource-group>
-#
-# Author: Hosam Shahin
-# Last Updated: April 28, 2025
+#   .\setup-fic.ps1 -RESOURCE_PREFIX <prefix> -TENANT <tenant-id> -CONFEDENTIAL_APP_ID <app-id>
 # =============================================================================
 
 [CmdletBinding()]

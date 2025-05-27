@@ -14,6 +14,8 @@ namespace MiFicExamples.Auth
 
             var miCredential = new ManagedIdentityCredential(managedIdentityClientId);
 
+            var options = new ClientAssertionCredentialOptions();
+            options.AdditionallyAllowedTenants.Add("*");
             return new ClientAssertionCredential(
                 tenantId,
                 appClientId,
@@ -23,7 +25,8 @@ namespace MiFicExamples.Auth
                     var tokenRequestContext = new Azure.Core.TokenRequestContext(authTokenScopes);
                     var accessToken = await miCredential.GetTokenAsync(tokenRequestContext).ConfigureAwait(false);
                     return accessToken.Token;
-                });
+                },
+                options);
         }
     }
 }
