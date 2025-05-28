@@ -14,16 +14,20 @@
             <th>Value</th>
         </tr>
         <tr>
-            <td>Company Name</td>
-            <td>@Model.CurrentUser.CompanyName</td>
-        </tr>
-        <tr>
-            <td>Job Title</td>
-            <td>@Model.CurrentUser.JobTitle</td>
-        </tr>
-        <tr>
-            <td>City</td>
-            <td>@Model.CurrentUser.City</td>
+            <td>Photo</td>
+            <td>
+                @{
+                    if (Model.CurrentUser.Photo != null)
+                    {
+                        <img style="margin: 5px 0; width: 150px" src="data:image/jpeg;base64, @Model.CurrentUser.Photo" />
+                    }
+                    else
+                    {
+                        <h3>NO PHOTO</h3>
+                        <p>Check user profile in Azure Active Directory to add a photo.</p>
+                    }
+                }
+            </td>
         </tr>
     </table>
 </div>

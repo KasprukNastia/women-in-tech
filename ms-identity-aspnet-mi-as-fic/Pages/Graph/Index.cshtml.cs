@@ -23,11 +23,19 @@ namespace MiFicExamples.Pages.Graph
 
             CurrentUser = new UserDto
             {
-                Name = user!.DisplayName ?? string.Empty,
-                CompanyName = user.CompanyName,
-                JobTitle = user.JobTitle,
-                City = user.City,
+                Name = user!.DisplayName ?? string.Empty
             };
+
+            using (var photoStream = await _graphServiceClient.Me.Photo?.Content?.GetAsync())
+            {
+                if (photoStream != null)
+                {
+                    MemoryStream ms = new MemoryStream();
+                    photoStream.CopyTo(ms);
+                    byte[] buffer = ms.ToArray();
+                    CurrentUser.Photo = Convert.ToBase64String(buffer);
+                }
+            }
         }
     }
 
@@ -37,6 +45,7 @@ namespace MiFicExamples.Pages.Graph
         public string? CompanyName { get; set; }
         public string? JobTitle { get; set; }
         public string? City { get; set; }
+        public string? Photo { get; set; }
     }
 }
 
