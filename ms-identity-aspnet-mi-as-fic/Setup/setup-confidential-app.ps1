@@ -110,7 +110,17 @@ $graphPermission = az ad app permission list --id $CONFEDENTIAL_APP_ID --query "
 if (-not $graphPermission -or $graphPermission.Count -eq 0) {
     az ad app permission add --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --api-permissions "e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope"
     if (-not $?) {
-        Write-Host "Failed to add MS Graph permission" -ForegroundColor Red
+        Write-Host "Failed to add MS Graph User.Read permission" -ForegroundColor Red
+        exit 1
+    }
+    az ad app permission add --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --api-permissions "469cd065-729e-4dee-b1fa-d92e0fab6310=Scope"
+    if (-not $?) {
+        Write-Host "Failed to add MS Graph ProfilePhoto.Read.All permission" -ForegroundColor Red
+        exit 1
+    }
+    az ad app permission add --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --api-permissions "14dad69e-099b-42c9-810b-d002981feec1=Scope"
+    if (-not $?) {
+        Write-Host "Failed to add MS Graph profile permission" -ForegroundColor Red
         exit 1
     }
 }
@@ -124,7 +134,17 @@ $graphGrant = az ad app permission list-grants --id $CONFEDENTIAL_APP_ID --query
 if (-not $graphGrant -or $graphGrant.Count -eq 0) {
     az ad app permission grant --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --scope "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
     if (-not $?) {
-        Write-Host "Failed to grant admin consent for MS Graph" -ForegroundColor Red
+        Write-Host "Failed to grant admin consent for MS Graph User.Read permission" -ForegroundColor Red
+        exit 1
+    }
+    az ad app permission grant --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --scope "469cd065-729e-4dee-b1fa-d92e0fab6310"
+    if (-not $?) {
+        Write-Host "Failed to grant admin consent for MS Graph for ProfilePhoto.Read.All permission" -ForegroundColor Red
+        exit 1
+    }
+    az ad app permission grant --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --scope "14dad69e-099b-42c9-810b-d002981feec1"
+    if (-not $?) {
+        Write-Host "Failed to grant admin consent for MS Graph for profile permission" -ForegroundColor Red
         exit 1
     }
 }
