@@ -135,8 +135,7 @@ $confedentialAppConfig = .\setup-confidential-app.ps1 -RESOURCE_PREFIX $RESOURCE
 $APP_CLIENT_ID = $confedentialAppConfig.ConfidentialAppId
 $APP_REG_NAME = $confedentialAppConfig.AppRegistrationName
 
-Write-Host "Assigning Storage Blob Data Contributor role to the app.." -ForegroundColor Yellow
-$APP_CLIENT_ID = $APP_CLIENT_ID
+Write-Host "Assigning Storage Blob Data Contributor role to the app '$APP_CLIENT_ID' in storage account '$STORAGE_ACCOUNT_NAME'" -ForegroundColor Yellow
 az role assignment create --assignee $APP_CLIENT_ID --role "Storage Blob Data Contributor" --scope "/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
 
 Write-Host "############## Step 7: Remote Key Vault Creation ##############" -ForegroundColor Yellow
@@ -194,7 +193,7 @@ $appsettings = @{
         MicrosoftGraph = @{
             BaseUrl = "https://graph.microsoft.com/v1.0"
             RequestAppToken = $false
-            Scopes = @("User.Read")
+            Scopes = @("User.Read", "ProfilePhoto.Read.All", "profile")
         }
     }
     AzureStorageConfig = @{
