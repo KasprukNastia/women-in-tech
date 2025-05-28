@@ -1,11 +1,11 @@
-# =============================================================================
+# =======================================================================================
 # cleanup.ps1
-# =============================================================================
-# This script builds and deploys the CodeCriticApi to Azure Web App
+# =======================================================================================
+# This script cleans up resources created during the setup execution
 #
 # Usage:
-#   .\cleanup.ps1 .\cleanup.ps1 -TENANT <tenant> -SUBSCRIPTION <subscription> -RESOURCE_PREFIX <prefix>
-# =============================================================================
+#   .\cleanup.ps1 -TENANT <tenant> -SUBSCRIPTION <subscription> -RESOURCE_PREFIX <prefix>
+# =======================================================================================
 
 param (
 

@@ -1,3 +1,12 @@
+# =============================================================================
+# setup-confidential-app.ps1
+# =============================================================================
+# This scipt sets up the app registartion
+# 
+# Usage:
+#   .\setup-confidential-app.ps1 -RESOURCE_PREFIX <prefix> -WEB_APP_URL <url>
+# =============================================================================
+
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$True)]
@@ -36,7 +45,6 @@ if (-not $existingSp) {
     }
     Start-Sleep -Seconds 3
 }
-
 
 Write-Host "Updating web app redirect URIs..." -ForegroundColor Yellow
 

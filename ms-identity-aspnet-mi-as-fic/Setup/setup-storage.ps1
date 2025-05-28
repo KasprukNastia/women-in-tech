@@ -1,3 +1,12 @@
+# =====================================================================================================
+# setup-storage.ps1
+# =====================================================================================================
+# This script sets up Azure Blob Storage
+#
+# Usage:
+#   .\setup-storage.ps1 -RESOURCE_PREFIX <prefix> -SUBSCRIPTION <subscription-id> -LOCATION <location>
+# =====================================================================================================
+
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$True)]

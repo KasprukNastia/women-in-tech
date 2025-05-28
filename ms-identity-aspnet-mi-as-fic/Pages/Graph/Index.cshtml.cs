@@ -9,33 +9,34 @@ namespace MiFicExamples.Pages.Graph
     {
         private readonly GraphServiceClient _graphServiceClient;
 
+        public UserDto CurrentUser { get; set; }
+
         public IndexModel(GraphServiceClient graphServiceClient)
         {
             _graphServiceClient = graphServiceClient;
+            CurrentUser = new UserDto();
         }
 
         public async Task OnGetAsync()
         {
             var user = await _graphServiceClient.Me.GetAsync();
-            ViewData["Me"] = user;
-            ViewData["name"] = user?.DisplayName;
 
-            using (var photoStream = await _graphServiceClient.Me.Photo.Content.GetAsync())
+            CurrentUser = new UserDto
             {
-                if (photoStream != null)
-                {
-                    MemoryStream ms = new MemoryStream();
-                    photoStream.CopyTo(ms);
-                    byte[] buffer = ms.ToArray();
-                    ViewData["photo"] = Convert.ToBase64String(buffer);
-
-                }
-                else
-                {
-                    ViewData["photo"] = null;
-                }
-            }
+                Name = user!.DisplayName ?? string.Empty,
+                CompanyName = user.CompanyName,
+                JobTitle = user.JobTitle,
+                City = user.City,
+            };
         }
+    }
+
+    public record UserDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? CompanyName { get; set; }
+        public string? JobTitle { get; set; }
+        public string? City { get; set; }
     }
 }
 
