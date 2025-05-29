@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "ms-vscode.azurecli",
+        "ms-dotnettools.csharp",
+        "ms-vscode.powershell",
+        "ms-dotnettools.csdevkit"
+    ]
+}
