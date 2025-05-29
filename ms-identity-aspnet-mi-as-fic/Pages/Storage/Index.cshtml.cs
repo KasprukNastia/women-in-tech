@@ -7,12 +7,12 @@ namespace MiFicExamples.Pages.Storage
     public class IndexModel : PageModel
     {
         private readonly IBlobStorageClient _blobStorageClient;
-        private readonly BlobStorageConfig _blobStorageConfig;
+        private readonly AzureStorageConfig _blobStorageConfig;
 
         public IList<Blob> Blobs { get; set; }
 
         public IndexModel(IBlobStorageClient blobStorageClient,
-            BlobStorageConfig blobStorageConfig)
+            AzureStorageConfig blobStorageConfig)
         {
             _blobStorageClient = blobStorageClient;
             _blobStorageConfig = blobStorageConfig;

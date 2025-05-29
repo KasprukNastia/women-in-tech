@@ -40,23 +40,23 @@ Ensure you review and understand the script's operations before proceeding.
 
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$True, HelpMessage='A prefix that will be used to name the resources')]
-    [string]$RESOURCE_PREFIX,
+  [Parameter(Mandatory=$True, HelpMessage='A prefix that will be used to name the resources')]
+  [string]$RESOURCE_PREFIX,
 
-    [Parameter(Mandatory=$True, HelpMessage='The Azure location where the resources will be created')]
-    [string]$LOCATION,
+  [Parameter(Mandatory=$True, HelpMessage='The Azure location where the resources will be created')]
+  [string]$LOCATION,
 
-    [Parameter(Mandatory=$False, HelpMessage='A different tenant to create the Key Vault in. Will create it in the home app tenant if not provided')]
-    [string]$REMOTE_KV_TENANT,
+  [Parameter(Mandatory=$False, HelpMessage='A different tenant to create the Key Vault in. Will create it in the home app tenant if not provided')]
+  [string]$REMOTE_KV_TENANT,
 
-    [Parameter(Mandatory=$False, HelpMessage='The subscription to create the keyvault in. Will create it in the home app tenant if not provided')]
-    [string]$REMOTE_KV_SUBSCRIPTION
+  [Parameter(Mandatory=$False, HelpMessage='The subscription to create the keyvault in. Will create it in the home app tenant if not provided')]
+  [string]$REMOTE_KV_SUBSCRIPTION
 )
 
 # Prompt user for confirmation
 Write-Host @"
 =============================================================================
-                    Code Critic Application Setup
+          Code Critic Application Setup
 =============================================================================
 This script will create and configure multiple Azure resources, including:
 
@@ -75,21 +75,21 @@ This script will create and configure multiple Azure resources, including:
    - Federated Credentials for the Managed Identity
 
 Note:   This script may incur costs in your Azure subscription. 
-        Be sure to run the cleanup.ps1 after testing.
+    Be sure to run the cleanup.ps1 after testing.
 =============================================================================
 "@ -ForegroundColor Yellow
 
 $proceed = Read-Host "Do you agree to proceed? (Yes/No)"
 if ($proceed -notmatch "^(y|yes)$") {
-    Write-Host "Script execution aborted." -ForegroundColor Red
-    exit
+  Write-Host "Script execution aborted." -ForegroundColor Red
+  exit
 }
 
 if (-not $RESOURCE_PREFIX) {
-    $RESOURCE_PREFIX = Read-Host -Prompt "Please enter a prefix to use while naming created resources"
+  $RESOURCE_PREFIX = Read-Host -Prompt "Please enter a prefix to use while naming created resources"
 }
 if (-not $LOCATION) {
-    $LOCATION = Read-Host -Prompt "Please enter the location where the resources will be created"
+  $LOCATION = Read-Host -Prompt "Please enter the location where the resources will be created"
 }
 
 Write-Host "Resource prefix: $RESOURCE_PREFIX"
@@ -100,7 +100,11 @@ Write-Host "Starting the setup process..." -ForegroundColor Green
 
 Write-Host "############## Step 1: Get User Information ##############" -ForegroundColor Yellow
 $userConfig = .\setup-user.ps1
-$CURRENT_USER_OBJECT_ID = $userConfig.CurrentUserObjectId
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "User login failed. Exiting script."
+  exit 1
+}
+
 $SUBSCRIPTION = $userConfig.Subscription
 $TENANT = $userConfig.Tenant
 $CURRENT_USER_EMAIL = $userConfig.UserEmail
@@ -144,18 +148,18 @@ $REMOTE_USER_EMAIL = ""
 $REMOTE_APP_CLIENT_ID = ""
 
 if (-not $REMOTE_KV_TENANT -or -not $REMOTE_KV_SUBSCRIPTION) {
-    Write-Host "You have not provided a remote subscription for keyvault. Let's create it in the current subscription" -ForegroundColor Yellow
-    $REMOTE_USER_EMAIL = $CURRENT_USER_EMAIL
-    $REMOTE_APP_CLIENT_ID = $APP_CLIENT_ID
+  Write-Host "You have not provided a remote subscription for keyvault. Let's create it in the current subscription" -ForegroundColor Yellow
+  $REMOTE_USER_EMAIL = $CURRENT_USER_EMAIL
+  $REMOTE_APP_CLIENT_ID = $APP_CLIENT_ID
 }
 else {
-    Write-Host "Now creating a Key Vault in another tenant.. Please be ready to login to the other tenant." -ForegroundColor Yellow
-    Start-Sleep -Milliseconds 500
-    $userConfigRemote = .\setup-user.ps1 -TENANT $REMOTE_KV_TENANT -SUBSCRIPTION $REMOTE_KV_SUBSCRIPTION
-    $REMOTE_USER_EMAIL = $userConfigRemote.UserEmail
-    $REMOTE_DOMAIN_NAME = $userConfigRemote.DomainName
-    Write-Host "$REMOTE_USER_EMAIL logged in successfully to $REMOTE_DOMAIN_NAME!" -ForegroundColor Cyan
-    Start-Sleep -Milliseconds 100
+  Write-Host "Now creating a Key Vault in another tenant.. Please be ready to login to the other tenant." -ForegroundColor Yellow
+  Start-Sleep -Milliseconds 500
+  $userConfigRemote = .\setup-user.ps1 -TENANT $REMOTE_KV_TENANT -SUBSCRIPTION $REMOTE_KV_SUBSCRIPTION
+  $REMOTE_USER_EMAIL = $userConfigRemote.UserEmail
+  $REMOTE_DOMAIN_NAME = $userConfigRemote.DomainName
+  Write-Host "$REMOTE_USER_EMAIL logged in successfully to $REMOTE_DOMAIN_NAME!" -ForegroundColor Cyan
+  Start-Sleep -Milliseconds 100
 }
 
 $keyVaultConfig = .\setup-key-vault.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -SUBSCRIPTION $SUBSCRIPTION -LOCATION $LOCATION -USER_EMAIL $REMOTE_USER_EMAIL -APP_CLIENT_ID $REMOTE_APP_CLIENT_ID
@@ -167,64 +171,38 @@ Write-Host "############## Step 8: Create Federated Identity Credential ########
 az account set --subscription $SUBSCRIPTION
 $ficConfig = .\setup-fic.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -CONFEDENTIAL_APP_ID $APP_CLIENT_ID -TENANT $TENANT
 
-Write-Host "############## Step 9: Generate appsettings.json ##############" -ForegroundColor Yellow
+Write-Host "############## Step 9: Create Client Secret ##############" -ForegroundColor Yellow
+$secretsConfig = .\setup-secrets.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -APP_CLIENT_ID $APP_CLIENT_ID
+$CLIENT_SECRET = $secretsConfig.ClientSecret
+
+Write-Host "############## Step 10: Generate appsettings.json ##############" -ForegroundColor Yellow
 start-sleep -Milliseconds 500
-# make sure the REMOTE_KV_TENANT is set
-if (-not $REMOTE_KV_TENANT) {
-    $REMOTE_KV_TENANT = $TENANT
-}
 
 $appsettings = @{
-    AzureAd = @{
-        Instance = "https://login.microsoftonline.com/"
-        Domain = "$DOMAIN_NAME"
-        TenantId = "$TENANT"
-        ClientId = "$APP_CLIENT_ID"
-        CallbackPath = "/signin-oidc"
-        ClientCredentials = @(
-            @{
-                SourceType = "SignedAssertionFromManagedIdentity"
-                ManagedIdentityClientId = "$USER_ASSIGNED_CLIENT_ID"
-                TokenExchangeUrl = "api://AzureADTokenExchange"
-            }
-        )
+  AuthConfig = @{
+    AppClientId = ""
+    TenantId = ""
+    ManagedIdentityClientId = ""
+    ClientSecret = "$CLIENT_SECRET"
+  }
+  AzureStorageConfig = @{
+    AccountName = "$STORAGE_ACCOUNT_NAME"
+    ContainerName = "$CONTAINER_NAME"
+  }
+  KeyVaultConfig = @{
+    Uri = "https://$KEYVAULT_NAME.vault.azure.net/"
+    SecretName="$SECRET_NAME"
+  }
+  Logging = @{
+    LogLevel = @{
+      Default = "Information"
+      Microsoft = "Warning"
+      "Microsoft.Hosting.Lifetime" = "Information"
     }
-    DownstreamApis = @{
-        MicrosoftGraph = @{
-            BaseUrl = "https://graph.microsoft.com/v1.0"
-            RequestAppToken = $false
-            Scopes = @("User.Read", "ProfilePhoto.Read.All", "profile")
-        }
-    }
-    AzureStorageConfig = @{
-        AccountName = "$STORAGE_ACCOUNT_NAME"
-        ContainerName = "$CONTAINER_NAME"
-    }
-    KeyVault = @{
-        TenantId = "$REMOTE_KV_TENANT"
-        Uri = "https://$KEYVAULT_NAME.vault.azure.net/"
-        SecretName="$SECRET_NAME"
-    }
-    Logging = @{
-        LogLevel = @{
-            Default = "Information"
-            Microsoft = "Warning"
-            "Microsoft.Hosting.Lifetime" = "Information"
-        }
-    }
-    AllowedHosts = "*"    
-    MetadataOnly = @{
-        WebAppName = "$WEB_APP_NAME"
-        WebAppUrl = "$WEB_APP_URL"
-        $APP_REG_NAME = "$APP_REG_NAME"
-        StorageAccountName = "$STORAGE_ACCOUNT_NAME"
-        ContainerName = "$CONTAINER_NAME"
-        ManagedIdentityName = "$MANAGED_IDENTITY_NAME"
-        FicIssuer = "https://login.microsoftonline.com/$Tenant/v2.0"
-        RemoteKeyVaultTenantAdminConsentUrl = "https://login.microsoftonline.com/$REMOTE_KV_TENANT/adminconsent?client_id=$APP_CLIENT_ID"        
-    }
+  }
+  AllowedHosts = "*"
 }
-$appsettingsJson = $appsettings | ConvertTo-Json -Depth 3
+$appsettingsJson = $appsettings | ConvertTo-Json -Depth 5
 Set-Content -Path "..\appsettings.json" -Value $appsettingsJson
 Write-Host $appsettingsJson -ForegroundColor Green
 Write-Host "appsettings.json generated successfully!" -ForegroundColor Green
@@ -241,33 +219,6 @@ start-sleep -Seconds 1
 
 Write-Host @"
 =============================================================================
-                    Setup Complete!
-=============================================================================
-Your Code Critic application has been set up with the following components:
-
-1. Azure AD Applications:
-   - Confidential Client (API): $CONFEDENTIAL_APP_ID
-   - Public Client: $PUBLIC_APP_ID
-To view the App Registration, visit: https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade
-
-2. Storage Account:
-   - Name: $STORAGE_ACCOUNT_NAME
-   - Container: $CONTAINER_NAME
-To view the Storage Account, visit: https://portal.azure.com/#resource/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME
-   
-3. Key Vault:
-   - Name: $KEYVAULT_NAME
-   - Secret: $SECRET_NAME
-   - KV Tenant: $REMOTE_KV_TENANT
-To view the Key Vault, visit: https://portal.azure.com/#resource/subscriptions/$REMOTE_KV_SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
-
-4. Web App:
-   - URL: $WEB_APP_URL
-   - Managed Identity: $managedIdentityConfig.ManagedIdentityName
-To view the web app, visit: $WEB_APP_URL
-To view logs, run: az webapp log tail --name $WEB_APP_NAME --resource-group $RESOURCE_GROUP_NAME
-
-If you created the Key Vault in a different tenant, please visit the following URL to grant admin consent:
-https://login.microsoftonline.com/$REMOTE_KV_TENANT/adminconsent?client_id=$APP_CLIENT_ID
+          Setup Complete!
 =============================================================================
 "@

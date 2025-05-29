@@ -4,7 +4,7 @@ namespace MiFicExamples.Storage;
 
 public interface IBlobStorageClient
 {
-    Task UploadBlobToStorage(BlobStorageConfig blobStorageConfig, Blob blob);
-    Task DeleteBlobFromStorage(BlobStorageConfig blobStorageConfig, string blobName);
-    Task<List<Blob>> GetAllBlobsFromStorage(BlobStorageConfig blobStorageConfig);
+    Task UploadBlobToStorage(AzureStorageConfig blobStorageConfig, Blob blob);
+    Task DeleteBlobFromStorage(AzureStorageConfig blobStorageConfig, string blobName);
+    Task<List<Blob>> GetAllBlobsFromStorage(AzureStorageConfig blobStorageConfig);
 }

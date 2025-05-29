@@ -47,7 +47,6 @@ if (-not $existingSp) {
 }
 
 Write-Host "Updating web app redirect URIs..." -ForegroundColor Yellow
-
 # Update web app redirect URIs
 az ad app update --id $CONFEDENTIAL_APP_ID --web-redirect-uris "$WEB_APP_URL/signin-oidc"
 if (-not $?) {
@@ -108,49 +107,25 @@ Write-Host "Assigning MS Graph permission..." -ForegroundColor Yellow
 # Assign MS Graph permission
 $graphPermission = az ad app permission list --id $CONFEDENTIAL_APP_ID --query "[?resourceAppId=='00000003-0000-0000-c000-000000000000']" -o json | ConvertFrom-Json
 if (-not $graphPermission -or $graphPermission.Count -eq 0) {
-    az ad app permission add --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --api-permissions "e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope"
+    az ad app permission add --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --api-permissions "7ab1d382-f21e-4acd-a863-ba3e13f7da61=Role" --only-show-errors
     if (-not $?) {
-        Write-Host "Failed to add MS Graph User.Read permission" -ForegroundColor Red
-        exit 1
+        Write-Host "Failed to add MS Graph User.Read.All permission" -ForegroundColor Red
     }
-    az ad app permission add --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --api-permissions "469cd065-729e-4dee-b1fa-d92e0fab6310=Scope"
-    if (-not $?) {
-        Write-Host "Failed to add MS Graph ProfilePhoto.Read.All permission" -ForegroundColor Red
-        exit 1
-    }
-    az ad app permission add --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --api-permissions "14dad69e-099b-42c9-810b-d002981feec1=Scope"
-    if (-not $?) {
-        Write-Host "Failed to add MS Graph profile permission" -ForegroundColor Red
-        exit 1
-    }
+    # Wait for permissions to be added to avoid concurrent call error
+    Start-Sleep -Seconds 3
 }
-
-# Wait for permissions to be added
-Start-Sleep -Seconds 3
 
 Write-Host "Granting admin consent for MS Graph..." -ForegroundColor Yellow
 # Grant admin consent for the app permissions
 $graphGrant = az ad app permission list-grants --id $CONFEDENTIAL_APP_ID --query "[?resourceAppId=='00000003-0000-0000-c000-000000000000']" -o json | ConvertFrom-Json
 if (-not $graphGrant -or $graphGrant.Count -eq 0) {
-    az ad app permission grant --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --scope "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
+    az ad app permission grant --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --scope "7ab1d382-f21e-4acd-a863-ba3e13f7da61"
     if (-not $?) {
-        Write-Host "Failed to grant admin consent for MS Graph User.Read permission" -ForegroundColor Red
-        exit 1
+        Write-Host "Failed to grant admin consent for MS Graph User.Read.All permission" -ForegroundColor Red
     }
-    az ad app permission grant --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --scope "469cd065-729e-4dee-b1fa-d92e0fab6310"
-    if (-not $?) {
-        Write-Host "Failed to grant admin consent for MS Graph for ProfilePhoto.Read.All permission" -ForegroundColor Red
-        exit 1
-    }
-    az ad app permission grant --id $CONFEDENTIAL_APP_ID --api "00000003-0000-0000-c000-000000000000" --scope "14dad69e-099b-42c9-810b-d002981feec1"
-    if (-not $?) {
-        Write-Host "Failed to grant admin consent for MS Graph for profile permission" -ForegroundColor Red
-        exit 1
-    }
+    # Wait for permissions to be added to avoid concurrent call error
+    Start-Sleep -Seconds 15
 }
-
-# Wait for permissions to be added
-Start-Sleep -Seconds 3
 
 # Try to grant admin consent, but don't fail if it doesn't work
 Write-Host "Attempting to grant admin consent..." -ForegroundColor Yellow

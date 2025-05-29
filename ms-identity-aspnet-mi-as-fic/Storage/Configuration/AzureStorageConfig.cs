@@ -1,12 +1,12 @@
 ﻿namespace MiFicExamples.Storage.Configuration;
 
-public record BlobStorageConfig
+public record AzureStorageConfig
 {
     public required string AccountName { get; init; }
     public required string ContainerName { get; init; }
     public string ContainerEndpoint => $"https://{AccountName}.blob.core.windows.net/{ContainerName}";
 
-    public BlobStorageConfig(IConfiguration configuration)
+    public AzureStorageConfig(IConfiguration configuration)
     {
         var azureStorageConfigSection = configuration.GetSection("AzureStorageConfig");
 

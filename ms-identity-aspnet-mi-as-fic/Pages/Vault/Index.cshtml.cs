@@ -8,18 +8,18 @@ namespace MiFicExamples.Pages.Vault;
 
 public class IndexModel : PageModel
 {
-    private readonly IClientAssertionCredentialFactory _clientAssertionCredentialFactory;
+    private readonly ICredentialFactory _credentialsFactory;
     private readonly AuthConfig _authConfig;
     private readonly KeyVaultConfig _keyVaultConfig;
 
     public string SecretName { get; private set; } = string.Empty;
     public string SecretValue { get; private set; } = string.Empty;
 
-    public IndexModel(IClientAssertionCredentialFactory clientAssertionCredentialFactory,
+    public IndexModel(ICredentialFactory credentialsFactory,
         AuthConfig authConfig,
         KeyVaultConfig keyVaultConfig)
     {
-        _clientAssertionCredentialFactory = clientAssertionCredentialFactory;
+        _credentialsFactory = credentialsFactory;
         _authConfig = authConfig;
         _keyVaultConfig = keyVaultConfig;
     }
@@ -34,11 +34,15 @@ public class IndexModel : PageModel
     {
         try
         {
-            var creds = _clientAssertionCredentialFactory.GetClientAssertionCredential(
+            var creds = _credentialsFactory.GetClientSecretCredentials(
                 _authConfig.TenantId,
                 _authConfig.AppClientId,
-                _authConfig.ManagedIdentityClientId,
-                [$"{_authConfig.AuthTokenAudience}/.default"]);
+                _authConfig.ClientSecret);
+
+            //var creds = _credentialsFactory.GetManagedIdentityCredentials(
+            //    _authConfig.TenantId,
+            //    _authConfig.AppClientId,
+            //    _authConfig.ManagedIdentityClientId);
 
             // Create a new SecretClient using creds
             var secretClient = new SecretClient(new Uri(_keyVaultConfig.Uri), creds);

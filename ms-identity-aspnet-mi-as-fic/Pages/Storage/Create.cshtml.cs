@@ -8,13 +8,13 @@ namespace MiFicExamples.Pages.Storage
     public class CreateModel : PageModel
     {
         private readonly IBlobStorageClient _blobStorageClient;
-        private readonly BlobStorageConfig _blobStorageConfig;
+        private readonly AzureStorageConfig _blobStorageConfig;
 
         [BindProperty]
         public Blob Blob { get; set; }
 
         public CreateModel(IBlobStorageClient blobStorageClient,
-            BlobStorageConfig blobStorageConfig)
+            AzureStorageConfig blobStorageConfig)
         {
             _blobStorageClient = blobStorageClient;
             _blobStorageConfig = blobStorageConfig;

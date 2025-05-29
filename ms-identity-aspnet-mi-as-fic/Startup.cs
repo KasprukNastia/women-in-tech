@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.UI;
 using Microsoft.IdentityModel.Logging;
 using MiFicExamples.Auth;
 using MiFicExamples.Auth.Configuration;
@@ -20,36 +17,18 @@ namespace MiFicExamples
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddOptions();
-            var initialScopes = Configuration.GetSection("DownstreamApis:MicrosoftGraph:Scopes").Get<List<string>>();
-
-            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-                    .AddMicrosoftIdentityWebApp(Configuration.GetSection("AzureAd"))
-                    .EnableTokenAcquisitionToCallDownstreamApi(initialScopes)
-                    .AddMicrosoftGraph(Configuration.GetSection("DownstreamApis:MicrosoftGraph"))
-                    .AddInMemoryTokenCaches();
-
-            services.AddScoped<IClientAssertionCredentialFactory, ClientAssertionCredentialFactory>();
+            services.AddScoped<ICredentialFactory, CredentialFactory>();
             services.AddScoped<IBlobStorageClient, BlobStorageClient>();
 
             services.AddScoped<AuthConfig>();
-            services.AddScoped<BlobStorageConfig>();
+            services.AddScoped<AzureStorageConfig>();
             services.AddScoped<KeyVaultConfig>();
 
-            services.AddAuthorization(options =>
-            {
-                // By default, all incoming requests will be authorized according to the default policy
-                options.FallbackPolicy = options.DefaultPolicy;
-            });
-            services.AddRazorPages()
-                .AddMvcOptions(options => { })
-                .AddMicrosoftIdentityUI();
+            services.AddRazorPages();
 
-            services.AddControllersWithViews()
-                    .AddMicrosoftIdentityUI();
+            services.AddControllersWithViews();
 
             services.AddLogging(logging =>
             {
@@ -59,7 +38,6 @@ namespace MiFicExamples
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -75,12 +53,8 @@ namespace MiFicExamples
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
 
             app.UseRouting();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

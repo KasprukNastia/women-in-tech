@@ -29,7 +29,7 @@ Compress-Archive -Path ./publish/* -DestinationPath ./package.zip -Force
 
 # Deploy to Azure Web App
 Write-Host "Deploying to Azure Web App..." -ForegroundColor Yellow
-az webapp deployment source config-zip --resource-group $RESOURCE_GROUP_NAME --name $WEB_APP_NAME --src ./package.zip
+az webapp deploy --resource-group $RESOURCE_GROUP_NAME --name $WEB_APP_NAME --src-path ./package.zip --type zip
 
 # Clean up temporary files
 Write-Host "Cleaning up temporary files..." -ForegroundColor Yellow

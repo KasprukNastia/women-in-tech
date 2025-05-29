@@ -7,7 +7,7 @@
 
         public KeyVaultConfig(IConfiguration configuration)
         {
-            var keyVaultConfigSection = configuration.GetSection("KeyVault");
+            var keyVaultConfigSection = configuration.GetSection(nameof(KeyVaultConfig));
 
             Uri = keyVaultConfigSection[nameof(Uri)] ??
                 throw new ArgumentException("Key vault Uri cannot be null");

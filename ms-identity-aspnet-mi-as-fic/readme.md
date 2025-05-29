@@ -24,7 +24,7 @@ Before starting, ensure the following:
 ---
 
 ## **Setup overview**
-You can setup the sample by running the setup/setup.ps1 PowerShell script. The script automates the provisioning and configuration of various Azure resources needed by the sample's code:
+You can setup the sample by running the Setup/setup.ps1 PowerShell script. The script automates the provisioning and configuration of various Azure resources needed by the sample's code:
 1. Resource Group
 2. Storage Account and Container
 3. Managed Identity

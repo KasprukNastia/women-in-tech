@@ -43,7 +43,7 @@ if ($USER_EMAIL) {
 }
 
 if ($APP_CLIENT_ID) {
-    az ad sp create --id $APP_CLIENT_ID
+    # az ad sp create --id $APP_CLIENT_ID 
     az role assignment create --assignee $APP_CLIENT_ID --role "Key Vault Secrets Officer" --scope "${KEYVAULT_RESOURCE_ID}"
 }
 

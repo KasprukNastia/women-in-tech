@@ -1,51 +1,49 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Graph;
-using Microsoft.Identity.Web;
+using MiFicExamples.Auth;
+using MiFicExamples.Auth.Configuration;
 
 namespace MiFicExamples.Pages.Graph
 {
-    [AuthorizeForScopes(Scopes = new[] { "User.Read" })]
     public class IndexModel : PageModel
     {
-        private readonly GraphServiceClient _graphServiceClient;
+        private readonly ICredentialFactory _credentialsFactory;
+        private readonly AuthConfig _authConfig;
 
-        public UserDto CurrentUser { get; set; }
+        public IReadOnlyList<UserDto> Users { get; set; } = new List<UserDto>();
 
-        public IndexModel(GraphServiceClient graphServiceClient)
+        public IndexModel(ICredentialFactory credentialsFactory, AuthConfig authConfig)
         {
-            _graphServiceClient = graphServiceClient;
-            CurrentUser = new UserDto();
+            _credentialsFactory = credentialsFactory;
+            _authConfig = authConfig;
         }
 
         public async Task OnGetAsync()
         {
-            var user = await _graphServiceClient.Me.GetAsync();
+            var creds = _credentialsFactory.GetClientSecretCredentials(
+                _authConfig.TenantId,
+                _authConfig.AppClientId,
+                _authConfig.ClientSecret);
 
-            CurrentUser = new UserDto
-            {
-                Name = user!.DisplayName ?? string.Empty
-            };
+            //var creds = _credentialsFactory.GetManagedIdentityCredentials(
+            //    _authConfig.TenantId,
+            //    _authConfig.AppClientId,
+            //    _authConfig.ManagedIdentityClientId);
 
-            using (var photoStream = await _graphServiceClient.Me.Photo?.Content?.GetAsync())
+            var graphServiceClient = new GraphServiceClient(creds);
+
+            var users = await graphServiceClient.Users.GetAsync();
+
+            if (users?.Value != null && users.Value.Any())
             {
-                if (photoStream != null)
-                {
-                    MemoryStream ms = new MemoryStream();
-                    photoStream.CopyTo(ms);
-                    byte[] buffer = ms.ToArray();
-                    CurrentUser.Photo = Convert.ToBase64String(buffer);
-                }
+                Users = users.Value.Select(u => new UserDto { DisplayName = u.DisplayName ?? string.Empty }).ToList();
             }
         }
     }
 
     public record UserDto
     {
-        public string Name { get; set; } = string.Empty;
-        public string? CompanyName { get; set; }
-        public string? JobTitle { get; set; }
-        public string? City { get; set; }
-        public string? Photo { get; set; }
+        public string DisplayName { get; set; } = string.Empty;
     }
 }
 

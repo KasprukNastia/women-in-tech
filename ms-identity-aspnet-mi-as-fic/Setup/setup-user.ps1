@@ -39,11 +39,17 @@ function Get-UserSelection {
 }
 
 # Check if user is logged in
-$accounts = az account list --query "[].{name:name, id:id, tenantId:tenantId}" -o json | ConvertFrom-Json
+$accounts = az account list --query "[].{name:name, id:id, tenantId:tenantId}" -o json --only-show-errors | ConvertFrom-Json 
 
 if (-not $accounts) {
     Write-Host "No active Azure login found. Please log in..." -ForegroundColor Yellow
-    az login
+    
+    $loginResult = az login 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Azure login failed. Exiting script."
+        exit 1
+    }
+
     $accounts = az account list --query "[].{name:name, id:id, tenantId:tenantId}" -o json | ConvertFrom-Json
 }
 

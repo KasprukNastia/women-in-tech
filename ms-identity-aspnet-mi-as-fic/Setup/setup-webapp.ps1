@@ -25,7 +25,7 @@ $WEB_APP_NAME = $RESOURCE_PREFIX + "2WebApp"
 Start-Sleep -Seconds 2
 
 Write-Host "Creating app service plan..." -ForegroundColor Yellow
-az appservice plan create --name $APP_PLAN_NAME --resource-group $RESOURCE_GROUP_NAME --sku FREE
+az appservice plan create --name $APP_PLAN_NAME --resource-group $RESOURCE_GROUP_NAME --sku FREE --only-show-errors
 
 Write-Host "Creating web app..." -ForegroundColor Yellow
 az webapp create --name $WEB_APP_NAME --resource-group $RESOURCE_GROUP_NAME --plan $APP_PLAN_NAME

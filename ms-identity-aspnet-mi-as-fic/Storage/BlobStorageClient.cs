@@ -10,16 +10,16 @@ namespace MiFicExamples.Storage;
 public class BlobStorageClient : IBlobStorageClient
 {
     private readonly AuthConfig _authConfig;
-    private readonly IClientAssertionCredentialFactory _clientAssertionCredentialFactory;
+    private readonly ICredentialFactory _credentialsFactory;
 
     public BlobStorageClient(AuthConfig authConfig,
-        IClientAssertionCredentialFactory clientAssertionCredentialFactory)
+        ICredentialFactory credentialsFactory)
     {
         _authConfig = authConfig;
-        _clientAssertionCredentialFactory = clientAssertionCredentialFactory;
+        _credentialsFactory = credentialsFactory;
     }
 
-    public async Task UploadBlobToStorage(BlobStorageConfig blobStorageConfig, Blob blob)
+    public async Task UploadBlobToStorage(AzureStorageConfig blobStorageConfig, Blob blob)
     {
         var containerClient = await CreateBlobStorageClient(blobStorageConfig);
 
@@ -27,7 +27,7 @@ public class BlobStorageClient : IBlobStorageClient
         await containerClient.CreateIfNotExistsAsync();
 
         // Upload text to a new block blob.
-        byte[] byteArray = Encoding.ASCII.GetBytes(blob.Content);
+        byte[] byteArray = Encoding.ASCII.GetBytes(blob.Content!);
 
         using (MemoryStream contentStream = new MemoryStream(byteArray))
         {
@@ -35,7 +35,7 @@ public class BlobStorageClient : IBlobStorageClient
         }
     }
 
-    public async Task DeleteBlobFromStorage(BlobStorageConfig blobStorageConfig, string blobName)
+    public async Task DeleteBlobFromStorage(AzureStorageConfig blobStorageConfig, string blobName)
     {
         var containerClient = await CreateBlobStorageClient(blobStorageConfig);
 
@@ -43,7 +43,7 @@ public class BlobStorageClient : IBlobStorageClient
         await blob.DeleteIfExistsAsync();
     }
 
-    public async Task<List<Blob>> GetAllBlobsFromStorage(BlobStorageConfig blobStorageConfig)
+    public async Task<List<Blob>> GetAllBlobsFromStorage(AzureStorageConfig blobStorageConfig)
     {
         var containerClient = await CreateBlobStorageClient(blobStorageConfig);
         await containerClient.CreateIfNotExistsAsync();
@@ -69,13 +69,17 @@ public class BlobStorageClient : IBlobStorageClient
         return blobs;
     }
 
-    private async Task<BlobContainerClient> CreateBlobStorageClient(BlobStorageConfig blobStorageConfig)
+    private async Task<BlobContainerClient> CreateBlobStorageClient(AzureStorageConfig blobStorageConfig)
     {
-        var creds = _clientAssertionCredentialFactory.GetClientAssertionCredential(
+        var creds = _credentialsFactory.GetClientSecretCredentials(
             _authConfig.TenantId,
             _authConfig.AppClientId,
-            _authConfig.ManagedIdentityClientId,
-            [$"{_authConfig.AuthTokenAudience}/.default"]);
+            _authConfig.ClientSecret);
+
+        //var creds = _credentialsFactory.GetManagedIdentityCredentials(
+        //    _authConfig.TenantId,
+        //    _authConfig.AppClientId,
+        //    _authConfig.ManagedIdentityClientId);
 
         // Get a credential and create a client object for the blob container.
         var containerClient = new BlobContainerClient(new Uri(blobStorageConfig.ContainerEndpoint), creds);

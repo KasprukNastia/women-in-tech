@@ -50,7 +50,7 @@ az group delete --name $RESOURCE_GROUP_NAME --no-wait --yes
 
 # Delete App Registration
 Write-Host "Deleting app registration..." -ForegroundColor Yellow
-$APP_REG_NAME = $RESOURCE_PREFIX + "2AppReg"
+$APP_REG_NAME = $RESOURCE_PREFIX + "2ConfidentialAppReg"
 $APP_REG_ID = az ad app list --display-name $APP_REG_NAME --query "[].appId" --output tsv
 if ($APP_REG_ID) {
     az ad app delete --id $APP_REG_ID
