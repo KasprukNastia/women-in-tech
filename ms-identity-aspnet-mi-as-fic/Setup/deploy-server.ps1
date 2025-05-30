@@ -36,4 +36,4 @@ Write-Host "Cleaning up temporary files..." -ForegroundColor Yellow
 Remove-Item -Path ./publish -Recurse -Force
 Remove-Item -Path ./package.zip -Force
 
-Write-Host "Deployment complete!" -ForegroundColor Green 
+Write-Host "Deployment of Web App '$WEB_APP_NAME' complete!" -ForegroundColor Green 
