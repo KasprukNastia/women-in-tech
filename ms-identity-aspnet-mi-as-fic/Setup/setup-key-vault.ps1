@@ -28,8 +28,8 @@ param (
 $RESOURCE_GROUP_NAME = $RESOURCE_PREFIX + "2RG"
 
 #### 4. Create a key vault
-Write-Host "Creating Key Vault... " -ForegroundColor Yellow
 $KEYVAULT_NAME = $RESOURCE_PREFIX + "2KV"
+Write-Host "Creating Key Vault '$KEYVAULT_NAME'... " -ForegroundColor Yellow
 az keyvault create --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP_NAME --location $LOCATION --enable-rbac-authorization
 
 Write-Host "Assigning Key Vault admin role..." -ForegroundColor Yellow
@@ -46,8 +46,8 @@ if ($APP_CLIENT_ID) {
     az role assignment create --assignee $APP_CLIENT_ID --role "Key Vault Secrets Officer" --scope "${KEYVAULT_RESOURCE_ID}"
 }
 
-Write-Host "Creating a secret in Key Vault..." -ForegroundColor Yellow
 $SECRET_NAME = $RESOURCE_PREFIX + "2SECRET"
+Write-Host "Creating a secret '$SECRET_NAME' in Key Vault..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $KEYVAULT_NAME --name $SECRET_NAME --value "This is a secret!"
 
 return @{
