@@ -10,7 +10,7 @@ The script performs the following operations:
 4. Creates a managed identity for secure access to resources.
 5. Deploys an App Service Plan and Web App and assigns the managed identity to the Web App.
 6. Registers an application in Azure AD, configures permissions, and creates a service principal.
-7. Optionally creates an Azure Key Vault in the same or a different tenant and sets up access roles and a secret.
+7. Creates an Azure Key Vault in the same or a different tenant and sets up access roles and a secret.
 8. Configures a Federated Identity Credential for the application.
 9. Generates `appsettings.json` for use in an ASP.NET Core application.
 
@@ -25,16 +25,11 @@ Ensure you review and understand the script's operations before proceeding.
 .PARAMETERS
 - TENANT: The Azure AD Tenant ID where the resources will be created.
 - SUBSCRIPTION: The Azure Subscription ID under which resources will be provisioned.
-- RESOURCE_PREFIX: A prefix for naming Azure resources (optional).
-- LOCATION: The Azure region where resources will be created (optional).
-- REMOTE_KV_TENANT: The Tenant ID for the Key Vault if it needs to be created in a different tenant.
-- REMOTE_KV_SUBSCRIPTION: The Subscription ID for the Key Vault in a different tenant.
+- RESOURCE_PREFIX: A prefix for naming Azure resources.
+- LOCATION: The Azure region where resources will be created.
 
 .EXAMPLE
 .\setup.ps1 -RESOURCE_PREFIX "TPO1" -LOCATION northeurope
-
-.EXAMPLE
-.\setup.ps1 -RESOURCE_PREFIX "TPO1" -LOCATION northeurope -REMOTE_KV_TENANT a4604de3-e541-455b-8429-f53850a7c237 -REMOTE_KV_SUBSCRIPTION c8802953-fac5-44d5-a743-95e3f3a46c6f
 
 #>
 
@@ -44,13 +39,7 @@ param (
   [string]$RESOURCE_PREFIX,
 
   [Parameter(Mandatory=$True, HelpMessage='The Azure location where the resources will be created')]
-  [string]$LOCATION,
-
-  [Parameter(Mandatory=$False, HelpMessage='A different tenant to create the Key Vault in. Will create it in the home app tenant if not provided')]
-  [string]$REMOTE_KV_TENANT,
-
-  [Parameter(Mandatory=$False, HelpMessage='The subscription to create the keyvault in. Will create it in the home app tenant if not provided')]
-  [string]$REMOTE_KV_SUBSCRIPTION
+  [string]$LOCATION
 )
 
 # Prompt user for confirmation
@@ -142,34 +131,17 @@ $APP_REG_NAME = $confedentialAppConfig.AppRegistrationName
 Write-Host "Assigning Storage Blob Data Contributor role to the app '$APP_CLIENT_ID' in storage account '$STORAGE_ACCOUNT_NAME'" -ForegroundColor Yellow
 az role assignment create --assignee $APP_CLIENT_ID --role "Storage Blob Data Contributor" --scope "/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
 
-Write-Host "############## Step 7: Remote Key Vault Creation ##############" -ForegroundColor Yellow
+Write-Host "############## Step 7: Key Vault Creation (Same Tenant) ##############" -ForegroundColor Yellow
 start-sleep -Milliseconds 500
-$REMOTE_USER_EMAIL = ""
-$REMOTE_APP_CLIENT_ID = ""
 
-if (-not $REMOTE_KV_TENANT -or -not $REMOTE_KV_SUBSCRIPTION) {
-  Write-Host "You have not provided a remote subscription for keyvault. Let's create it in the current subscription" -ForegroundColor Yellow
-  $REMOTE_USER_EMAIL = $CURRENT_USER_EMAIL
-  $REMOTE_APP_CLIENT_ID = $APP_CLIENT_ID
-}
-else {
-  Write-Host "Now creating a Key Vault in another tenant.. Please be ready to login to the other tenant." -ForegroundColor Yellow
-  Start-Sleep -Milliseconds 500
-  $userConfigRemote = .\setup-user.ps1 -TENANT $REMOTE_KV_TENANT -SUBSCRIPTION $REMOTE_KV_SUBSCRIPTION
-  $REMOTE_USER_EMAIL = $userConfigRemote.UserEmail
-  $REMOTE_DOMAIN_NAME = $userConfigRemote.DomainName
-  Write-Host "$REMOTE_USER_EMAIL logged in successfully to $REMOTE_DOMAIN_NAME!" -ForegroundColor Cyan
-  Start-Sleep -Milliseconds 100
-}
-
-$keyVaultConfig = .\setup-key-vault.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -SUBSCRIPTION $SUBSCRIPTION -LOCATION $LOCATION -USER_EMAIL $REMOTE_USER_EMAIL -APP_CLIENT_ID $REMOTE_APP_CLIENT_ID
+$keyVaultConfig = .\setup-key-vault.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -SUBSCRIPTION $SUBSCRIPTION -LOCATION $LOCATION -USER_EMAIL $CURRENT_USER_EMAIL -APP_CLIENT_ID $APP_CLIENT_ID
 $KEYVAULT_NAME = $keyVaultConfig.KeyVaultName
 $SECRET_NAME = $keyVaultConfig.SecretName
 
 Write-Host "############## Step 8: Create Federated Identity Credential ##############" -ForegroundColor Yellow
 # Make sure the user is logged in to the correct tenant
 az account set --subscription $SUBSCRIPTION
-$ficConfig = .\setup-fic.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -CONFEDENTIAL_APP_ID $APP_CLIENT_ID -TENANT $TENANT
+#$ficConfig = .\setup-fic.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -CONFEDENTIAL_APP_ID $APP_CLIENT_ID -TENANT $TENANT
 
 Write-Host "############## Step 9: Create Client Secret ##############" -ForegroundColor Yellow
 $secretsConfig = .\setup-secrets.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -APP_CLIENT_ID $APP_CLIENT_ID
@@ -201,15 +173,17 @@ $appsettings = @{
     }
   }
   AllowedHosts = "*"
+  MetadataOnly = @{
+    WebAppUrl = "$WEB_APP_URL"
+  }
 }
 $appsettingsJson = $appsettings | ConvertTo-Json -Depth 5
 Set-Content -Path "..\appsettings.json" -Value $appsettingsJson
-Write-Host $appsettingsJson -ForegroundColor Green
 Write-Host "appsettings.json generated successfully!" -ForegroundColor Green
 
 Write-Host "Environment setup complete!" -ForegroundColor Green
 
-Write-Host "############## Step :10 build the code and deploy the app ##############" -ForegroundColor Yellow
+Write-Host "############## Step 11: Build the code and deploy the app ##############" -ForegroundColor Yellow
 start-sleep -Milliseconds 500
 .\deploy-server.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX
 

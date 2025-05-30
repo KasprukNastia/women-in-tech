@@ -1,8 +1,7 @@
 # ==================================================================================================================================================
 # setup-key-vault.ps1
 # ==================================================================================================================================================
-# This script sets up the key vault in remote/current tenant.
-# For remote tenant you have to provide user email from remote tenant.
+# This script sets up the key vault in current tenant.
 #
 # Usage:
 #   .\setup-key-vault.ps1 -RESOURCE_PREFIX <prefix> -SUBSCRIPTION <subscription-id> -LOCATION <location> -USER_EMAIL <email> -APP_CLIENT_ID <app-id>
