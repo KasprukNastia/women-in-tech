@@ -12,8 +12,11 @@ public class IndexModel : PageModel
     private readonly AuthConfig _authConfig;
     private readonly KeyVaultConfig _keyVaultConfig;
 
-    public string SecretName { get; private set; } = string.Empty;
-    public string SecretValue { get; private set; } = string.Empty;
+    public string LocalSecretName { get; private set; } = string.Empty;
+    public string LocalSecretValue { get; private set; } = string.Empty;
+
+    public string? RemoteSecretName { get; private set; } = string.Empty;
+    public string? RemoteSecretValue { get; private set; } = string.Empty;
 
     public IndexModel(ICredentialFactory credentialsFactory,
         AuthConfig authConfig,
@@ -26,29 +29,35 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        SecretName = _keyVaultConfig.SecretName;
-        SecretValue = await GetSecretFromAnotherTenantUsingMsiFic();
+        LocalSecretName = _keyVaultConfig.Local.SecretName!;
+        LocalSecretValue = await GetSecret(_keyVaultConfig.Local);
+
+        if (!string.IsNullOrWhiteSpace(_keyVaultConfig?.Remote?.Uri) && !string.IsNullOrWhiteSpace(_keyVaultConfig.Remote.SecretName))
+        {
+            RemoteSecretName = _keyVaultConfig.Remote.SecretName;
+            RemoteSecretValue = await GetSecret(_keyVaultConfig.Remote);
+        }
     }
 
-    public async Task<string> GetSecretFromAnotherTenantUsingMsiFic()
+    public async Task<string> GetSecret(KeyVaultConfigParams keyVaultConfigParams)
     {
         try
         {
-            var creds = _credentialsFactory.GetClientSecretCredentials(
-                _authConfig.TenantId,
-                _authConfig.AppClientId,
-                _authConfig.ClientSecret);
-
-            //var creds = _credentialsFactory.GetManagedIdentityCredentials(
+            //var creds = _credentialsFactory.GetClientSecretCredentials(
             //    _authConfig.TenantId,
             //    _authConfig.AppClientId,
-            //    _authConfig.ManagedIdentityClientId);
+            //    _authConfig.ClientSecret);
+
+            var creds = _credentialsFactory.GetManagedIdentityCredentials(
+                _authConfig.TenantId,
+                _authConfig.AppClientId,
+                _authConfig.ManagedIdentityClientId);
 
             // Create a new SecretClient using creds
-            var secretClient = new SecretClient(new Uri(_keyVaultConfig.Uri), creds);
+            var secretClient = new SecretClient(new Uri(keyVaultConfigParams.Uri!), creds);
 
             // Retrieve the secret
-            KeyVaultSecret secret = await secretClient.GetSecretAsync(_keyVaultConfig.SecretName);
+            KeyVaultSecret secret = await secretClient.GetSecretAsync(keyVaultConfigParams.SecretName);
 
             return secret.Value;
         }

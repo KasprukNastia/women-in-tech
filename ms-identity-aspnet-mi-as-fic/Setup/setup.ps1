@@ -138,7 +138,7 @@ $keyVaultConfig = .\setup-key-vault.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -SUBSC
 $KEYVAULT_NAME = $keyVaultConfig.KeyVaultName
 $SECRET_NAME = $keyVaultConfig.SecretName
 
-Write-Host "############## Step 8: Create Federated Identity Credential ##############" -ForegroundColor Yellow
+#Write-Host "############## Step 8: Create Federated Identity Credential ##############" -ForegroundColor Yellow
 # Make sure the user is logged in to the correct tenant
 az account set --subscription $SUBSCRIPTION
 #$ficConfig = .\setup-fic.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -CONFEDENTIAL_APP_ID $APP_CLIENT_ID -TENANT $TENANT
@@ -162,8 +162,14 @@ $appsettings = @{
     ContainerName = "$CONTAINER_NAME"
   }
   KeyVaultConfig = @{
-    Uri = "https://$KEYVAULT_NAME.vault.azure.net/"
-    SecretName="$SECRET_NAME"
+    Local = @{
+      Uri = "https://$KEYVAULT_NAME.vault.azure.net/"
+      SecretName="$SECRET_NAME"
+    }
+    Remote = @{
+      Uri = ""
+      SecretName=""
+    }
   }
   Logging = @{
     LogLevel = @{

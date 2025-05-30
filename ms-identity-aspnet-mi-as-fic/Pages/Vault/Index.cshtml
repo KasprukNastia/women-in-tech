@@ -1,16 +1,22 @@
 ﻿@page
 @model MiFicExamples.Pages.Vault.IndexModel
 @{
-    ViewData["Title"] = "Fetch a secret from Key Vault in a different tenant";
+    ViewData["Title"] = "Fetch a secret from Key Vault";
 }
 
 
 <div class="text-center">
     <h1 class="display-4">@ViewData["Title"]</h1>
     <p>    
-        <h3>Getting a secret from a KeyVault in a different tenant</h3>
+        <h3>Getting a secret from a KeyVault in a <b>SAME</b> tenant</h3>
         <br /><br /><br />
-        <span><strong>@Model.SecretName:</strong> @Model.SecretValue</span>
+        <span><strong>@Model.LocalSecretName:</strong> @Model.LocalSecretValue</span>
+        <br />
+    </p>
+    <p>
+        <h3>Getting a secret from a KeyVault in a <b>REMOTE</b> tenant</h3>
+        <br /><br /><br />
+        <span><strong>@Model.RemoteSecretName:</strong> @Model.RemoteSecretValue</span>
         <br />
     </p>
 </div>
