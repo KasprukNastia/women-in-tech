@@ -23,7 +23,7 @@ Before starting, ensure the following:
 - .NET 9 SDK installed [Download .NET 9.0](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - IDE of your choice.
 
-For using DevContainer:
+Alternatively, you can use DevContainers setup. For that you'll need just the following:
 - Visual Studio Code [Download Visual Studio Code](https://code.visualstudio.com/download)
 - Docker [Install Docker](https://docs.docker.com/engine/install/)
 
