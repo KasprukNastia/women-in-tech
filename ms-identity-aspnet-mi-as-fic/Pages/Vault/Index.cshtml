@@ -1,17 +1,33 @@
 ﻿@page
 @model MiFicExamples.Pages.Vault.IndexModel
 @{
-    ViewData["Title"] = "Fetch a secret from Key Vault in a differnt tenant";
+    ViewData["Title"] = "Fetch a secret from Key Vault";
 }
 
 
 <div class="text-center">
     <h1 class="display-4">@ViewData["Title"]</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/en-us/azure/app-service/">building Web apps on Azure App Service</a>.</p>
+    @if (!Model.UseManagedIdentity)
+    {
+        <p style="color: red">Using SECRETS to get data</p>
+    }
+    else
+    {
+        <p style="color: green">Using MANAGED IDENTITY to get data</p>
+    }
     <p>    
-        <h3>Getting a secret from a KeyVault in a different tenant:</h3>
+        <h3>Getting a secret from a KeyVault in a <b>SAME</b> tenant</h3>
         <br /><br /><br />
-        <span><strong>The secret is:</strong> @Model.SecretFromAnotherTenantUsingMsiFic</span>
+        <span><strong>@Model.LocalSecretName:</strong> @Model.LocalSecretValue</span>
         <br />
     </p>
+    @if (!string.IsNullOrWhiteSpace(Model.RemoteSecretName))
+    {
+        <p>
+            <h3>Getting a secret from a KeyVault in a <b>REMOTE</b> tenant</h3>
+            <br /><br /><br />
+            <span><strong>@Model.RemoteSecretName:</strong> @Model.RemoteSecretValue</span>
+            <br />
+        </p>
+    }
 </div>

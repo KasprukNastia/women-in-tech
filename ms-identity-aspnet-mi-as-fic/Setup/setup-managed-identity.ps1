@@ -1,3 +1,12 @@
+# =============================================================================================================
+# setup-managed-identity.ps1
+# =============================================================================================================
+# This script sets up Managed Identity
+#
+# Usage:
+#   .\setup-managed-identity.ps1 -RESOURCE_PREFIX <prefix> -SUBSCRIPTION <subscription-id> -LOCATION <location>
+# =============================================================================================================
+
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$True)]

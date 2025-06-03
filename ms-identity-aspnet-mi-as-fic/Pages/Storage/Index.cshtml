@@ -1,43 +1,50 @@
 ﻿@page
-@model MiFicExamples.Pages.AzureStorage.IndexModel
+@model MiFicExamples.Pages.Storage.IndexModel
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Azure Blob storage example";
 }
 
 <div class="text-center">
     <h1 class="display-4">@ViewData["Title"]</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/en-us/azure/app-service/">building Web apps on Azure App Service</a>.</p>
+    @if (!Model.UseManagedIdentity)
+    {
+        <p style="color: red">Using SECRETS to get data</p>
+    }
+    else
+    {
+        <p style="color: green">Using MANAGED IDENTITY to get data</p>
+    }
 </div>
 
-<h1>User comments</h1>
+<h1>Existing blobs</h1>
 
 <p>
-    <a asp-page="Create">Create a new comment</a>
+    <a asp-page="Create">Create a new blob</a>
 </p>
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Comments[0].Name)
+                @Html.DisplayNameFor(model => model.Blobs[0].Key)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Comments[0].UserComment)
+                @Html.DisplayNameFor(model => model.Blobs[0].Content)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model.Comments)
+        @foreach (var item in Model.Blobs)
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Name)
+                    @Html.DisplayFor(modelItem => item.Key)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.UserComment)
+                    @Html.DisplayFor(modelItem => item.Content)
                 </td>
                 <td>
-                    <a asp-page="./Delete" asp-route-id="@item.Name">Delete</a>
+                    <a asp-page="./Delete" asp-route-id="@item.Key">Delete</a>
                 </td>
             </tr>
         }

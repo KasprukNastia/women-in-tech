@@ -1,73 +1,58 @@
+using Azure.Core;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Graph;
-using Microsoft.Identity.Client;
-using Microsoft.Identity.Web;
-using Microsoft.Kiota.Abstractions.Authentication;
+using MiFicExamples.Auth;
+using MiFicExamples.Auth.Configuration;
 
 namespace MiFicExamples.Pages.Graph
 {
-    [AuthorizeForScopes(Scopes = new[] { "User.Read" })]
     public class IndexModel : PageModel
     {
-        private readonly ILogger<IndexModel> _logger;
-        private readonly IConfidentialClientApplication _app;
-        private readonly IConfiguration _configuration;
-        private readonly GraphServiceClient _graphServiceClient;
+        private readonly ICredentialFactory _credentialsFactory;
+        private readonly AuthConfig _authConfig;
 
-        public IndexModel(ILogger<IndexModel> logger, IConfiguration configuration, GraphServiceClient graphServiceClient)
+        public IReadOnlyList<UserDto> Users { get; set; } = new List<UserDto>();
+        public bool UseManagedIdentity { get; set; }
+
+        public IndexModel(ICredentialFactory credentialsFactory, AuthConfig authConfig)
         {
-            _logger = logger;
-            //_app = app;
-            _configuration = configuration;
-            _graphServiceClient = graphServiceClient;
+            _credentialsFactory = credentialsFactory;
+            _authConfig = authConfig;
+            UseManagedIdentity = _authConfig.UseManagedIdentity;
         }
 
         public async Task OnGetAsync()
         {
-            //var accessTokenProvider = new BaseBearerTokenAuthenticationProvider(new CustomAccessTokenProvider(_app));
-            //var graphServiceClient = new GraphServiceClient(accessTokenProvider);
-
-            var user = await _graphServiceClient.Me.GetAsync();
-            ViewData["Me"] = user;
-            ViewData["name"] = user?.DisplayName;
-
-            using (var photoStream = await _graphServiceClient.Me.Photo.Content.GetAsync())
+            TokenCredential creds;
+            if (!_authConfig.UseManagedIdentity)
             {
-                if (photoStream != null)
-                {
-                    MemoryStream ms = new MemoryStream();
-                    photoStream.CopyTo(ms);
-                    byte[] buffer = ms.ToArray();
-                    ViewData["photo"] = Convert.ToBase64String(buffer);
+                creds = _credentialsFactory.GetClientSecretCredentials(
+                    _authConfig.TenantId,
+                    _authConfig.AppClientId,
+                    _authConfig.ClientSecret);
+            }
+            else
+            {
+                creds = _credentialsFactory.GetManagedIdentityCredentials(
+                    _authConfig.TenantId,
+                    _authConfig.AppClientId,
+                    _authConfig.ManagedIdentityClientId);
+            }
 
-                }
-                else
-                {
-                    ViewData["photo"] = null;
-                }
+            var graphServiceClient = new GraphServiceClient(creds);
+
+            var users = await graphServiceClient.Users.GetAsync();
+
+            if (users?.Value != null && users.Value.Any())
+            {
+                Users = users.Value.Select(u => new UserDto { DisplayName = u.DisplayName ?? string.Empty }).ToList();
             }
         }
     }
 
-
-    public class CustomAccessTokenProvider : IAccessTokenProvider
+    public record UserDto
     {
-        private readonly IConfidentialClientApplication _confidentialClientApplication;
-
-        public CustomAccessTokenProvider(IConfidentialClientApplication confidentialClientApplication)
-        {
-            _confidentialClientApplication = confidentialClientApplication;
-        }
-
-        public AllowedHostsValidator AllowedHostsValidator { get; } = new AllowedHostsValidator();
-
-        public async Task<string> GetAuthorizationTokenAsync(Uri uri, Dictionary<string, object>? additionalAuthenticationContext = null, CancellationToken cancellationToken = default)
-        {
-            var scopes = new[] { "https://graph.microsoft.com/.default" };
-            var result = await _confidentialClientApplication.AcquireTokenForClient(scopes).ExecuteAsync(cancellationToken);
-            return result.AccessToken;
-        }
+        public string DisplayName { get; set; } = string.Empty;
     }
-
 }
 

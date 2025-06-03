@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.UI;
 using Microsoft.IdentityModel.Logging;
-using MiFicExamples.Data;
-using MiFicExamples.Models;
+using MiFicExamples.Auth;
+using MiFicExamples.Auth.Configuration;
+using MiFicExamples.Storage;
+using MiFicExamples.Storage.Configuration;
+using MiFicExamples.Vault.Configuration;
 
 
 namespace MiFicExamples
@@ -17,60 +17,18 @@ namespace MiFicExamples
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //var miClientId = Configuration["AzureAd:ClientCredentials:ManagedIdentityClientId"];
+            services.AddScoped<ICredentialFactory, CredentialFactory>();
+            services.AddScoped<IBlobStorageClient, BlobStorageClient>();
 
-            //var credential = new ChainedTokenCredential(
-            //    new ManagedIdentityCredential(clientId: miClientId));
+            services.AddScoped<AuthConfig>();
+            services.AddScoped<AzureStorageConfig>();
+            services.AddScoped<KeyVaultConfig>();
 
-            //string[] scopes = { "https://graph.microsoft.com/.default" };
+            services.AddRazorPages();
 
-            //var graphClient = new GraphServiceClient(credential, scopes);
-
-            services.AddOptions();
-            var initialScopes = Configuration.GetSection("DownstreamApis:MicrosoftGraph:Scopes").Get<List<string>>();
-
-            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-                    .AddMicrosoftIdentityWebApp(Configuration.GetSection("AzureAd"))
-                    .EnableTokenAcquisitionToCallDownstreamApi(initialScopes)
-                    .AddMicrosoftGraph(Configuration.GetSection("DownstreamApis:MicrosoftGraph"))
-                    .AddInMemoryTokenCaches();
-
-            //services.AddSingleton<IConfidentialClientApplication>(sp =>
-            //{
-            //    return ConfidentialClientApplicationBuilder
-            //        .Create(Configuration["AzureAd:ClientId"])
-            //        .WithAuthority("https://login.microsoftonline.com/9590e3dc-70c9-460a-83f9-d6f5dde741b5/v2.0", false)
-            //        .WithClientAssertion(async (AssertionRequestOptions _) =>
-            //        {
-            //            var managedIdentityCredential = new ManagedIdentityCredential(Configuration["AzureAd:ClientCredentials:ManagedIdentityClientId"]);
-
-            //            // fetch Managed Identity token for the specified audience
-            //            var tokenRequestContext = new Azure.Core.TokenRequestContext(["api://AzureADTokenExchange/.default"]);
-            //            var accessToken = await managedIdentityCredential.GetTokenAsync(tokenRequestContext);
-            //            return accessToken.Token;
-            //        })
-            //        .WithTenantId(Configuration["AzureAd:TenantId"])
-            //        .WithCacheOptions(CacheOptions.EnableSharedCacheOptions)
-            //        .Build();
-            //});
-
-            services.AddTransient<CommentsContext>();
-            services.Configure<AzureStorageConfig>(Configuration.GetSection("AzureStorageConfig"));
-
-            services.AddAuthorization(options =>
-            {
-                // By default, all incoming requests will be authorized according to the default policy
-                options.FallbackPolicy = options.DefaultPolicy;
-            });
-            services.AddRazorPages()
-                .AddMvcOptions(options => { })
-                .AddMicrosoftIdentityUI();
-
-            services.AddControllersWithViews()
-                    .AddMicrosoftIdentityUI();
+            services.AddControllersWithViews();
 
             services.AddLogging(logging =>
             {
@@ -80,7 +38,6 @@ namespace MiFicExamples
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -96,12 +53,8 @@ namespace MiFicExamples
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
 
             app.UseRouting();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

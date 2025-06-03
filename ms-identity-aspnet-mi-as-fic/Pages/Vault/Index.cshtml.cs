@@ -1,74 +1,79 @@
-using Azure.Identity;
+using Azure.Core;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Mvc;
+using MiFicExamples.Auth;
+using MiFicExamples.Auth.Configuration;
+using MiFicExamples.Vault.Configuration;
 
 namespace MiFicExamples.Pages.Vault;
 
 public class IndexModel : PageModel
 {
-    private readonly IConfiguration _configuration;
-    
-    public string MsiToken { get; private set; } = string.Empty;
+    private readonly ICredentialFactory _credentialsFactory;
+    private readonly AuthConfig _authConfig;
+    private readonly KeyVaultConfig _keyVaultConfig;
 
-    public string DefaultMsiToken { get; private set; } = string.Empty;
+    public string LocalSecretName { get; private set; } = string.Empty;
+    public string LocalSecretValue { get; private set; } = string.Empty;
 
-    public string SecretFromAnotherTenantUsingMsiFic { get; private set; } = string.Empty;
+    public string? RemoteSecretName { get; private set; } = string.Empty;
+    public string? RemoteSecretValue { get; private set; } = string.Empty;
 
+    public bool UseManagedIdentity { get; set; }
 
-    public IndexModel(IConfiguration configuration)
+    public IndexModel(ICredentialFactory credentialsFactory,
+        AuthConfig authConfig,
+        KeyVaultConfig keyVaultConfig)
     {
-        _configuration = configuration;
+        _credentialsFactory = credentialsFactory;
+        _authConfig = authConfig;
+        _keyVaultConfig = keyVaultConfig;
+        UseManagedIdentity = authConfig.UseManagedIdentity;
     }
 
     public async Task OnGetAsync()
     {
-        // load the secrets..
-        SecretFromAnotherTenantUsingMsiFic = await GetSecretFromAnotherTenantUsingMsiFic();
+        LocalSecretName = _keyVaultConfig.Local.SecretName!;
+        LocalSecretValue = await GetSecret(_keyVaultConfig.Local);
+
+        if (!string.IsNullOrWhiteSpace(_keyVaultConfig?.Remote?.Uri) && !string.IsNullOrWhiteSpace(_keyVaultConfig.Remote.SecretName))
+        {
+            RemoteSecretName = _keyVaultConfig.Remote.SecretName;
+            RemoteSecretValue = await GetSecret(_keyVaultConfig.Remote);
+        }
     }
 
-    public async Task<string> GetSecretFromAnotherTenantUsingMsiFic()
-    {        
+    public async Task<string> GetSecret(KeyVaultConfigParams keyVaultConfigParams)
+    {
         try
-        {            
-            var keyVaultTenantId = _configuration["KeyVault:TenantId"];
-            var keyVaultUri = _configuration["KeyVault:Uri"];
-            var secretName = _configuration["KeyVault:SecretName"];
-            
-            var clientId = _configuration["AzureAd:ClientId"];            
-            var msiClientId = _configuration["AzureAd:ClientCredentials:0:ManagedIdentityClientId"];
-
-            string audience = "api://AzureADTokenExchange";
-            var miCredential = new ManagedIdentityCredential(msiClientId);
-
-            ClientAssertionCredential assertion = new(                
-                keyVaultTenantId, // note that this value must be the keyvault's tenant id
-                clientId,
-                async (token) => await GetManagedIdentityToken(miCredential, audience));
-            
-            if (string.IsNullOrEmpty(keyVaultUri))
+        {
+            TokenCredential creds;
+            if (!_authConfig.UseManagedIdentity)
             {
-                throw new ArgumentNullException(nameof(keyVaultUri), "KeyVault URI cannot be null or empty.");
+                creds = _credentialsFactory.GetClientSecretCredentials(
+                    _authConfig.TenantId,
+                    _authConfig.AppClientId,
+                    _authConfig.ClientSecret);
             }
-            // Create a new SecretClient using the assertion
-            var secretClient = new SecretClient(new Uri(keyVaultUri), assertion);
+            else
+            {
+                creds = _credentialsFactory.GetManagedIdentityCredentials(
+                    _authConfig.TenantId,
+                    _authConfig.AppClientId,
+                    _authConfig.ManagedIdentityClientId);
+            }
+
+            // Create a new SecretClient using creds
+            var secretClient = new SecretClient(new Uri(keyVaultConfigParams.Uri!), creds);
 
             // Retrieve the secret
-            KeyVaultSecret secret = await secretClient.GetSecretAsync(secretName);
+            KeyVaultSecret secret = await secretClient.GetSecretAsync(keyVaultConfigParams.SecretName);
 
             return secret.Value;
         }
         catch (Exception ex)
         {
-            return $"Error fetching secret from the other tenant: {ex.Message}, Full Trace: {ex.ToString()}";
+            return $"Error fetching secret from the other tenant: {ex.Message}. Full Trace: {ex.ToString()}";
         }
-    }
-
-    static async Task<string> GetManagedIdentityToken(ManagedIdentityCredential miCredential, string audience)
-    {
-        // we must request the managed identity token with the specified audience for federation to work.
-        return (await miCredential.GetTokenAsync(new Azure.Core.TokenRequestContext([$"{audience}/.default"])).ConfigureAwait(false)).Token;
     }
 }

@@ -1,26 +1,35 @@
 ﻿@page
-@model MiFicExamples.Pages.AzureStorage.CreateModel
+@model MiFicExamples.Pages.Storage.CreateModel
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create a new blob";
 }
 
-<h1>Create a new user comment</h1>
+<h1>@ViewData["Title"]</h1>
 
-<h4>Comment</h4>
+@if (!Model.UseManagedIdentity)
+{
+    <p style="color: red">Using SECRETS to get data</p>
+}
+else
+{
+    <p style="color: green">Using MANAGED IDENTITY to get data</p>
+}
+
+<h4>Blob</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="Comment.Name" class="control-label"></label>
-                <input asp-for="Comment.Name" class="form-control" />
-                <span asp-validation-for="Comment.Name" class="text-danger"></span>
+                <label asp-for="Blob.Key" class="control-label"></label>
+                <input asp-for="Blob.Key" class="form-control" />
+                <span asp-validation-for="Blob.Key" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Comment.UserComment" class="control-label"></label>
-                <input asp-for="Comment.UserComment" class="form-control" />
-                <span asp-validation-for="Comment.UserComment" class="text-danger"></span>
+                <label asp-for="Blob.Content" class="control-label"></label>
+                <input asp-for="Blob.Content" class="form-control" />
+                <span asp-validation-for="Blob.Content" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />

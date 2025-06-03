@@ -1,3 +1,12 @@
+# ========================================================================================
+# setup-webapp.ps1
+# ========================================================================================
+# This script sets up Azure Web App
+#
+# Usage:
+#   .\setup-webapp.ps1 -RESOURCE_PREFIX <prefix> -USER_ASSIGNED_RESOURCE_ID <resource-id>
+# ========================================================================================
+
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$True)]
@@ -16,7 +25,7 @@ $WEB_APP_NAME = $RESOURCE_PREFIX + "2WebApp"
 Start-Sleep -Seconds 2
 
 Write-Host "Creating app service plan..." -ForegroundColor Yellow
-az appservice plan create --name $APP_PLAN_NAME --resource-group $RESOURCE_GROUP_NAME --sku FREE
+az appservice plan create --name $APP_PLAN_NAME --resource-group $RESOURCE_GROUP_NAME --sku FREE --only-show-errors
 
 Write-Host "Creating web app..." -ForegroundColor Yellow
 az webapp create --name $WEB_APP_NAME --resource-group $RESOURCE_GROUP_NAME --plan $APP_PLAN_NAME
@@ -29,6 +38,14 @@ az webapp log config --name $WEB_APP_NAME --resource-group $RESOURCE_GROUP_NAME 
 
 Write-Host "app logging configured" -ForegroundColor Green
 Write-Host "to view logs, run: az webapp log tail --name $WEB_APP_NAME --resource-group $RESOURCE_GROUP_NAME" -ForegroundColor Yellow
+
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings ASPNETCORE_ENVIRONMENT=Development --only-show-errors
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__ManagedIdentityClientId= --only-show-errors
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__UseManagedIdentity=false --only-show-errors
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__TenantId= --only-show-errors
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__AppClientId= --only-show-errors
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings KeyVaultConfig__Remote__Uri= --only-show-errors
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings KeyVaultConfig__Remote__SecretName= --only-show-errors
 
 # Return the web app details
 @{

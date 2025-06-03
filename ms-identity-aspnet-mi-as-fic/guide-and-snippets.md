@@ -35,7 +35,7 @@ In Azure App Service (& Azure Functions), you can enable a managed identity via 
 
 - **Azure CLI**: Use the CLI for automation. For example, to assign an existing user-assigned identity:
 
-```bash
+```powershell
 az webapp identity assign --resource-group <YourResourceGroup> --name <YourAppName> --identities <IdentityResourceID>
 ```
 
@@ -53,9 +53,9 @@ Next, configure the Microsoft Entra ID application to trust the managed identity
 
 3. **Add a Federated Identity Credential**: This is the key step that links the managed identity to the app:
 
-    - **Using Azure Portal**: In the Entra admin center (Azure AD portal), go to App Registrations > Your App > Certificates & secrets > Federated credentials (tab). Click Add credential. In the "Federated credential scenario" dropdown, select Managed Identity (if available). You will be prompted to choose the managed identity. Select the subscription and the specific User-assigned managed identity resource that you enabled earlier​. The portal will auto-fill the Issuer, Subject, and Audience for you.
+    - **Using Azure Portal**: In the Entra admin center (Azure AD portal), go to App Registrations > Your App > Certificates & secrets > Federated credentials (tab). Click Add credential. In the "Federated credential scenario" dropdown, select Managed Identity. You will be prompted to choose the managed identity. Select the subscription and the specific User-assigned managed identity resource that you enabled earlier​. The portal will auto-fill the Issuer, Subject, and Audience for you.
 
-    - **Using PowerShell**: You can script this for automation. Ensure you have the Azure PowerShell Az module and run a command like:
+    - **Using powershell**: You can script this for automation. Ensure you have the Azure powershell Az module and run a command like:
 
     ```powershell
     $appObjectId = "<YOUR_APP_OBJECT_ID>"
@@ -70,7 +70,7 @@ Next, configure the Microsoft Entra ID application to trust the managed identity
 
     - **Using Azure CLI**: As of now, Azure CLI may require using the Graph REST API to add a federated credential. For example:
 
-    ```bash
+    ```powershell
     az ad app federated-credential create --id <YOUR_APP_OBJECT_ID> --parameters credential.json
     ```
     This is an example json file defining the credentials:
@@ -87,7 +87,7 @@ Next, configure the Microsoft Entra ID application to trust the managed identity
     ```
     
     - **Using Graph APIs**: 
-    ```bash
+    ```powershell
     az rest --method POST \
       --uri "https://graph.microsoft.com/v1.0/applications/<APP_OBJECT_ID>/federatedIdentityCredentials" \
       --body '{

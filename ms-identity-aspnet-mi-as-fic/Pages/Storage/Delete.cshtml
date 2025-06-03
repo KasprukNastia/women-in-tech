@@ -1,31 +1,41 @@
 ﻿@page
-@model MiFicExamples.Pages.AzureStorage.DeleteModel
+@model MiFicExamples.Pages.Storage.DeleteModel
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete this Blob - are you sure?";
 }
 
-<h1>Delete this comment- are you sure?</h1>
+<h1>@ViewData["Title"]</h1>
+
+@if (!Model.UseManagedIdentity)
+{
+    <p style="color: red">Using SECRETS to get data</p>
+}
+else
+{
+    <p style="color: green">Using MANAGED IDENTITY to get data</p>
+}
+
 <div>
     <hr />
-    <h4>Comment</h4>
+    <h4>Blob</h4>
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Comment.Name)
+            @Html.DisplayNameFor(model => model.Blob.Key)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Comment.Name)
+            @Html.DisplayFor(model => model.Blob.Key)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Comment.UserComment)
+            @Html.DisplayNameFor(model => model.Blob.Content)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Comment.UserComment)
+            @Html.DisplayFor(model => model.Blob.Content)
         </dd>
     </dl>
 
     <form method="post">
-        <input type="hidden" asp-for="Comment.Name" />
+        <input type="hidden" asp-for="Blob.Key" />
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-page="./Index">Back to List</a>
     </form>

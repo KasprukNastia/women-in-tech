@@ -1,28 +1,35 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using MiFicExamples.Models;
+using MiFicExamples.Auth.Configuration;
+using MiFicExamples.Storage;
+using MiFicExamples.Storage.Configuration;
 
-namespace MiFicExamples.Pages.AzureStorage
+namespace MiFicExamples.Pages.Storage
 {
     public class CreateModel : PageModel
     {
-        private readonly MiFicExamples.Data.CommentsContext _context;
-        public CreateModel(MiFicExamples.Data.CommentsContext context)
+        private readonly IBlobStorageClient _blobStorageClient;
+        private readonly AzureStorageConfig _blobStorageConfig;
+
+        [BindProperty]
+        public Blob Blob { get; set; }
+
+        public bool UseManagedIdentity { get; set; }
+
+        public CreateModel(IBlobStorageClient blobStorageClient,
+            AzureStorageConfig blobStorageConfig,
+            AuthConfig authConfig)
         {
-            _context = context;
-            Comment = new();
+            _blobStorageClient = blobStorageClient;
+            _blobStorageConfig = blobStorageConfig;
+            Blob = new();
+            UseManagedIdentity = authConfig.UseManagedIdentity;
         }
         public IActionResult OnGet()
         {
             return Page();
         }
 
-        [BindProperty]
-        public Comment Comment { get; set; }
-
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
@@ -30,7 +37,7 @@ namespace MiFicExamples.Pages.AzureStorage
                 return Page();
             }
 
-            await _context.CreateComment(Comment);
+            await _blobStorageClient.UploadBlobToStorage(_blobStorageConfig, Blob);
 
             return RedirectToPage("./Index");
         }
