@@ -64,9 +64,6 @@ Now navigate to your web app url. If unsure, you should find the url in the `Met
 You should see the following page.
 ![alt text](./assets/image.png)
 
-## **Remote Key Vault**
-If you want to try Remote KV scenario with us, please add your App ID to the doc: [Key Vault Sample](https://1drv.ms/w/s!AlF40yjNFS7gsi5mqdHU8lEmKZhs?e=xIq6ex)
-
 ## **Clean Up Resources**
 After testing, clean up resources to avoid incurring charges:
 

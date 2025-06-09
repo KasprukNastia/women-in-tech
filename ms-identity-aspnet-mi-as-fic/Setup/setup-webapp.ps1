@@ -40,10 +40,7 @@ Write-Host "app logging configured" -ForegroundColor Green
 Write-Host "to view logs, run: az webapp log tail --name $WEB_APP_NAME --resource-group $RESOURCE_GROUP_NAME" -ForegroundColor Yellow
 
 az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings ASPNETCORE_ENVIRONMENT=Development --only-show-errors
-az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__ManagedIdentityClientId= --only-show-errors
 az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__UseManagedIdentity=false --only-show-errors
-az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__TenantId= --only-show-errors
-az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__AppClientId= --only-show-errors
 az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings KeyVaultConfig__Remote__Uri= --only-show-errors
 az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings KeyVaultConfig__Remote__SecretName= --only-show-errors
 

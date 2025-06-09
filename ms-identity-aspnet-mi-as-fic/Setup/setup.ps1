@@ -121,12 +121,15 @@ start-sleep -Milliseconds 500
 $webAppConfig = .\setup-webapp.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -USER_ASSIGNED_RESOURCE_ID $USER_ASSIGNED_RESOURCE_ID
 $WEB_APP_URL = $webAppConfig.WebAppUrl
 $WEB_APP_NAME = $webAppConfig.WebAppName
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__TenantId=$TENANT --only-show-errors
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__ManagedIdentityClientId=$USER_ASSIGNED_CLIENT_ID --only-show-errors
 
 Write-Host "############## Step 6: Create App Registration ##############" -ForegroundColor Yellow
 start-sleep -Milliseconds 500
 $confedentialAppConfig = .\setup-confidential-app.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -WEB_APP_URL $WEB_APP_URL
 $APP_CLIENT_ID = $confedentialAppConfig.ConfidentialAppId
 $APP_REG_NAME = $confedentialAppConfig.AppRegistrationName
+az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__AppClientId=$APP_CLIENT_ID --only-show-errors
 
 Write-Host "Assigning Storage Blob Data Contributor role to the app '$APP_CLIENT_ID' in storage account '$STORAGE_ACCOUNT_NAME'" -ForegroundColor Yellow
 az role assignment create --assignee $APP_CLIENT_ID --role "Storage Blob Data Contributor" --scope "/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
@@ -138,24 +141,24 @@ $keyVaultConfig = .\setup-key-vault.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -SUBSC
 $KEYVAULT_NAME = $keyVaultConfig.KeyVaultName
 $SECRET_NAME = $keyVaultConfig.SecretName
 
-#Write-Host "############## Step 8: Create Federated Identity Credential ##############" -ForegroundColor Yellow
+Write-Host "############## Step 8: Create Federated Identity Credential ##############" -ForegroundColor Yellow
 # Make sure the user is logged in to the correct tenant
 az account set --subscription $SUBSCRIPTION
-#$ficConfig = .\setup-fic.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -CONFEDENTIAL_APP_ID $APP_CLIENT_ID -TENANT $TENANT
+$ficConfig = .\setup-fic.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -CONFEDENTIAL_APP_ID $APP_CLIENT_ID -TENANT $TENANT
 
-Write-Host "############## Step 8: Create Client Secret ##############" -ForegroundColor Yellow
+Write-Host "############## Step 9: Create Client Secret ##############" -ForegroundColor Yellow
 $secretsConfig = .\setup-secrets.ps1 -RESOURCE_PREFIX $RESOURCE_PREFIX -APP_CLIENT_ID $APP_CLIENT_ID
 $CLIENT_SECRET = $secretsConfig.ClientSecret
 az webapp config appsettings set -n $WEB_APP_NAME -g $RESOURCE_GROUP_NAME --settings AuthConfig__ClientSecret=$CLIENT_SECRET --only-show-errors
 
-Write-Host "############## Step 9: Generate appsettings.json ##############" -ForegroundColor Yellow
+Write-Host "############## Step 10: Generate appsettings.json ##############" -ForegroundColor Yellow
 start-sleep -Milliseconds 500
 
 $appsettings = @{
   AuthConfig = @{
-    AppClientId = ""
-    TenantId = ""
-    ManagedIdentityClientId = ""
+    AppClientId = "$APP_CLIENT_ID"
+    TenantId = "$TENANT"
+    ManagedIdentityClientId = "$USER_ASSIGNED_CLIENT_ID"
     ClientSecret = "$CLIENT_SECRET"
     UseManagedIdentity = "false"
   }
